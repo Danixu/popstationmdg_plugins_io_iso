@@ -1,0 +1,6 @@
+[submodule "thirdparty/wxwidgets"]
+	path = thirdparty/wxwidgets
+	url = https://github.com/wxWidgets/wxWidgets.git
+[submodule "thirdparty/popstationmdg"]
+	path = thirdparty/popstationmdg
+	url = git@github.com:Danixu/popstationmdg.git
