@@ -1,18 +1,65 @@
 #include "iso_reader.hpp"
 
-IsoReader::IsoReader() {}
-IsoReader::~IsoReader() {}
+// Reader constructor
+IsoReader::IsoReader()
+{
+    // Set the stream to throw an exception if failbit was set
+    std::ios_base::iostate exceptionMask = input_file.exceptions() | std::ios::failbit;
+    input_file.exceptions(exceptionMask);
+
+    // Fake GameID for testing purposes
+    gameID = new char[11];
+
+    strncpy_s(gameID, 11, "SCES00009", 11);
+
+    /*
+        // Buffer Options
+        PluginOption enableBuffer;
+        options_order.push_back("enable_buffer");
+        enableBuffer.name = "Enable read buffer";
+        enableBuffer.value = false;
+        options_items["enable_buffer"] = enableBuffer;
+
+        PluginOption bufferSize;
+        options_order.push_back("read_buffer_size");
+        bufferSize.name = "Read buffer size";
+        bufferSize.value = (uint64_t)131072; // 128k
+        options_items["read_buffer_size"] = bufferSize;
+        */
+}
+
+// Reader destructor
+IsoReader::~IsoReader()
+{
+    if (gameID != NULL)
+    {
+        delete[] gameID;
+        gameID = NULL;
+    }
+
+    if (last_error != NULL)
+    {
+        delete[] last_error;
+        last_error = NULL;
+    }
+
+    /*
+    options_order.clear();
+    options_items.clear();
+    */
+}
 
 // Open the ISO file
-bool IsoReader::open(std::string fileName, uint8_t threads)
+bool IsoReader::open(const char *filename, unsigned int threads)
 {
     // This reader is very simple and non CPU intensive, so threads will be ignored
 
     // Open source file
-    input_file.open(fileName, std::ios::in | std::ios::binary);
+    input_file.open(filename, std::ios::in | std::ios::binary);
     if (!input_file.is_open())
     {
-        setLastError("There was an error opening the input file");
+        char error_msg[] = "There was an error opening the input file";
+        setLastError(error_msg);
         return false;
     }
     return true;
@@ -21,26 +68,23 @@ bool IsoReader::open(std::string fileName, uint8_t threads)
 // Close the ISO file (if was opened)
 bool IsoReader::close()
 {
-    if (input_file.is_open())
+    try
     {
         input_file.close();
-        if (!input_file.is_open())
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return true;
     }
-    return true;
+    catch (std::ios_base::failure &e)
+    {
+        setLastError("There was an error closing the file: " + std::string(e.what()));
+        return false;
+    }
 
     // After testing the getID function, this must be uncommented
     // game_id = "";
 }
 
 // Seek into the file
-bool IsoReader::seek(size_t position, PluginSeekMode mode)
+bool IsoReader::seek(unsigned long long position, unsigned int mode)
 {
     auto seek_mode = std::ios::beg;
 
@@ -59,20 +103,21 @@ bool IsoReader::seek(size_t position, PluginSeekMode mode)
 
     if (!input_file.seekg(position, seek_mode))
     {
-        setLastError("There was an error seeking into the file");
+        char error_msg[] = "There was an error seeking into the file";
+        setLastError(error_msg);
         return false;
     }
     return true;
 }
 
 // Same as above because ISO is just single disk format
-bool IsoReader::seekCurrentDisk(size_t position, PluginSeekMode mode)
+bool IsoReader::seekCurrentDisk(unsigned long long position, unsigned int mode)
 {
     return seek(position, mode);
 }
 
 // Get the current image position
-size_t IsoReader::tell()
+unsigned long long IsoReader::tell()
 {
     if (input_file.is_open())
     {
@@ -80,33 +125,26 @@ size_t IsoReader::tell()
     }
     else
     {
-        setLastError("There is no file opened");
+        char error_msg[] = "There is no file opened";
+        setLastError(error_msg);
         return 0;
     }
 }
 
 // Get the current image position
-size_t IsoReader::tellCurrentDisk()
+unsigned long long IsoReader::tellCurrentDisk()
 {
     return tell();
 }
 
 // Get the disk ID (currently a dummy)
-std::string IsoReader::getID()
+char *IsoReader::getID()
 {
-    if (game_id != "")
-    {
-        return game_id;
-    }
-    else
-    {
-        // GameID detection code (TO-DO)
-        return "";
-    }
+    return gameID;
 }
 
 // In ISO files the ID and DiskID are the same (is just a disk)
-std::string IsoReader::getDiskID()
+char *IsoReader::getDiskID()
 {
     return getID();
 }
@@ -118,7 +156,7 @@ bool IsoReader::isOK()
 }
 
 // Get the last error
-std::string IsoReader::getError()
+char *IsoReader::getError()
 {
     return last_error;
 }
@@ -126,12 +164,13 @@ std::string IsoReader::getError()
 // Clear the last error and isOK status
 void IsoReader::clearError()
 {
-    last_error = "";
+    delete[] last_error;
+    last_error = NULL;
     is_ok = true;
 }
 
 // Get total disk will be always 1 if a disk is oppened
-uint8_t IsoReader::getTotalDisks()
+unsigned int IsoReader::getTotalDisks()
 {
     if (input_file.is_open())
     {
@@ -139,13 +178,14 @@ uint8_t IsoReader::getTotalDisks()
     }
     else
     {
-        setLastError("There is no file opened");
+        char error_msg[] = "There is no file opened";
+        setLastError(error_msg);
         return 0;
     }
 }
 
 // Same as above
-uint8_t IsoReader::getCurrentDisk()
+unsigned int IsoReader::getCurrentDisk()
 {
     if (input_file.is_open())
     {
@@ -153,62 +193,232 @@ uint8_t IsoReader::getCurrentDisk()
     }
     else
     {
-        setLastError("There is no file opened");
+        char error_msg[] = "There is no file opened";
+        setLastError(error_msg);
         return 0;
     }
 }
 
 // ChangeCurrentDisk is not available for this format.
-bool IsoReader::changeCurrentDisk(uint8_t disk)
+bool IsoReader::changeCurrentDisk(unsigned int disk)
 {
     return false;
 }
 
 // Read the input file data into the provided buffer. Return the readed bytes.
-size_t IsoReader::read(uint8_t *output, size_t toRead)
+unsigned long long IsoReader::read(unsigned char *output, unsigned long long toRead)
 {
     if (!input_file.is_open())
     {
         // There is no open file
-        setLastError("There is no file opened");
+        char error_msg[] = "There is no file opened";
+        setLastError(error_msg);
         return 0;
     }
 
-    if (input_file.read(output, toRead))
+    try
     {
+        input_file.read(output, toRead);
         return input_file.gcount();
     }
-    else
+    catch (std::ios_base::failure &e)
     {
-        if (input_file.fail())
-        {
-            setLastError(std::strerror(errno));
-            return input_file.gcount();
-        }
-        else
-        {
-            if (input_file.eof() && input_file.gcount() == 0)
-            {
-                setLastError("File is already at End Of File");
-                return 0;
-            }
-            else
-            {
-                return input_file.gcount();
-            }
-        }
+        setLastError("There was an error reading the file: " + std::string(e.what()));
+        return 0;
     }
 }
 
 // Return the compatible extensions.
-std::vector<std::string> IsoReader::getCompatibleExtensions()
+const char *IsoReader::getCompatibleExtensions()
 {
     return extensions;
 }
 
-// Set the last error text and isOK to false
 void IsoReader::setLastError(std::string error)
 {
+    if (error.length() > 0)
+    {
+        char *error_char = new char[error.length() + 1];
+        strncpy_s(error_char, error.length() + 1, error.c_str(), error.length());
+        setLastError(error_char);
+    }
+}
+
+// Set the last error text and isOK to false
+void IsoReader::setLastError(char *error)
+{
+    if (last_error != NULL)
+    {
+        delete[] last_error;
+        last_error = NULL;
+    }
+
     last_error = error;
     is_ok = false;
+}
+
+extern "C"
+{
+    //
+    // Creates a new plugin object in memory and return its address
+    //
+    void SHARED_EXPORT *load()
+    {
+        return (void *)new IsoReader();
+    }
+
+    //
+    // Delete the plugin object. Must be called before unload the library or memory leaks will occur
+    //
+    void SHARED_EXPORT unload(void *ptr)
+    {
+        delete (IsoReader *)ptr;
+    }
+
+    //
+    // Get the type of plugin to allow to filter
+    //
+    unsigned int SHARED_EXPORT getType()
+    {
+        return PTReader;
+    }
+
+    //
+    // Return the plugin name
+    //
+    const char SHARED_EXPORT *getPluginName()
+    {
+        return "ISO Image";
+    }
+
+    //
+    // Return the plugin version
+    //
+    const char SHARED_EXPORT *getPluginVersion()
+    {
+        return "0.0.1";
+    }
+
+    bool SHARED_EXPORT open(void *handler, const char *filename, unsigned int threads)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->open(filename, threads);
+    }
+
+    bool SHARED_EXPORT close(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->close();
+    }
+
+    bool SHARED_EXPORT seek(void *handler, unsigned long long position, unsigned int mode)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->seek(position, mode);
+    }
+
+    bool SHARED_EXPORT seekCurrentDisk(void *handler, unsigned long long position, unsigned int mode)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->seekCurrentDisk(position, mode);
+    }
+
+    unsigned long long SHARED_EXPORT tell(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->tell();
+    }
+
+    unsigned long long SHARED_EXPORT tellCurrentDisk(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->tellCurrentDisk();
+    }
+
+    char SHARED_EXPORT *getID(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getID();
+    }
+
+    char SHARED_EXPORT *getDiskID(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getDiskID();
+    }
+
+    // ISO Images doesn't have any information about title
+    char SHARED_EXPORT *getTitle(void *handler)
+    {
+        return NULL;
+    }
+
+    char SHARED_EXPORT *getDiskTitle(void *handler)
+    {
+        return NULL;
+    }
+
+    bool SHARED_EXPORT isOK(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->isOK();
+    }
+
+    char SHARED_EXPORT *getError(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getError();
+    }
+
+    void SHARED_EXPORT clearError(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        object->clearError();
+    }
+
+    unsigned int SHARED_EXPORT getTotalDisks(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getTotalDisks();
+    }
+
+    unsigned int SHARED_EXPORT getCurrentDisk(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getCurrentDisk();
+    }
+
+    bool SHARED_EXPORT changeCurrentDisk(void *handler, unsigned int disk)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->changeCurrentDisk(disk);
+    }
+
+    unsigned long long SHARED_EXPORT read(void *handler, unsigned char *output, unsigned long long toRead)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->read(output, toRead);
+    }
+
+    const char SHARED_EXPORT *getCompatibleExtensions(void *handler)
+    {
+        IsoReader *object = (IsoReader *)handler;
+
+        return object->getCompatibleExtensions();
+    }
 }

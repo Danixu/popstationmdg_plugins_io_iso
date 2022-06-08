@@ -4,9 +4,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/wx/osx/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
             ],
             "defines": [
                 "__WXOSX_COCOA__",
@@ -24,9 +22,7 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/wx/msw/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
             ],
             "defines": [
                 "__WXMSW__",
@@ -43,9 +39,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/wx/gtk/*",
-                "${workspaceFolder}/thirdparty/wxwidgets/include/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
             ],
             "defines": [
                 "__WXGTK__"
