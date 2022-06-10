@@ -33,7 +33,7 @@
             "compilerPath": "cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "windows-msvc-x64"
         },
         {
             "name": "Linux",
@@ -47,7 +47,16 @@
             "compilerPath": "g++",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [],
+            "mergeConfigurations": true,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**",
+                    "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

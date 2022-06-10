@@ -16,7 +16,7 @@
 int main()
 {
 
-    auto plugins = load_plugins("./", EXT);
+    auto plugins = load_plugins("C:/Users/danix/Desktop/PopStation MD Info/popstationmdg_plugins/popstationmdg_plugins_iso/bin/windows", EXT);
     for (auto ph : plugins)
     {
         fprintf(stderr, "Loading plugin...\n");
@@ -32,9 +32,16 @@ int main()
     }
     for (auto ph : plugins)
     {
+        // Load the library functions
         auto plugin = ph->load();
-        std::string id_test = std::string(ph->getDiskID());
+
+        // Open a file to get the data
+        const char *filename = "C:\\Users\\danix\\Desktop\\aa\\Firebugs (Europe).bin";
+        ph->open(filename);
+        std::string id_test = ph->getDiskID();
+        fprintf(stderr, "Error: %s\n", ph->getError().c_str());
         fprintf(stderr, "%s\n", id_test.c_str());
+        ph->close();
     }
 
     return 0;

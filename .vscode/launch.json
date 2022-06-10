@@ -2,25 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(lldb-mac) Launch",
-            "type": "lldb",
+            "name": "(msvc) Launch Cross Compile",
+            "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/subprojects/Build/popstationmdg_core/popstationmdg.app",
-            "preLaunchTask": "Build with CMake"
+            "program": "${workspaceFolder}\\bin\\windows\\test.exe",
+            "cwd": "${workspaceFolder}\\bin\\windows\\",
+            "preLaunchTask": "(Linux) Cross-compile the example exe"
         },
         {
-            "name": "(lldb-linux) Launch",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/subprojects/Build/popstationmdg_core/popstationmdg",
-            "preLaunchTask": "Build with CMake"
-        },
-        {
-            "name": "(msvc) Launch",
+            "name": "Just runit",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\subprojects\\Build\\popstationmdg_core\\Debug\\popstationmdg.exe",
-            "preLaunchTask": "Build with CMake"
+            "program": "${workspaceFolder}\\bin\\windows\\test.exe",
         }
     ]
 }

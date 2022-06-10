@@ -2,30 +2,50 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build with CMake",
+            "label": "(linux) Cross-compile the ISO library",
             "type": "shell",
-            "command": "cmake",
+            "command": "x86_64-w64-mingw32-g++",
             "args": [
-                "--build",
-                "build"
+                "-Iinclude",
+                "-Ithirdparty/popstationmdg/src/plugins/",
+                "-std=c++17",
+                "-g",
+                "-fPIC",
+                "-DBUILD_LIB",
+                "-shared",
+                "-static-libgcc",
+                "-static-libstdc++",
+                "thirdparty/popstationmdg/src/plugins/export.cpp",
+                "src/reader/iso_reader.cpp",
+                "-o",
+                "bin/windows/iso_reader.dll"
+            ]
+        },
+        {
+            "label": "(Linux) Cross-compile the example exe",
+            "type": "shell",
+            "command": "x86_64-w64-mingw32-g++",
+            "args": [
+                "-Ithirdparty/popstationmdg/src/plugins/",
+                "thirdparty/popstationmdg/src/plugins/export.cpp",
+                "thirdparty/popstationmdg/src/logger/logger.cpp",
+                "thirdparty/popstationmdg/src/plugins/plugin_handler.cpp",
+                "src/test.cpp",
+                "-static-libgcc",
+                "-static-libstdc++",
+                "-std=c++17",
+                "-g",
+                "-o",
+                "bin/windows/test.exe"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "dependsOn": [
-                "Configure with CMake"
-            ]
-        },
-        {
-            "label": "Configure with CMake",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "-DCMAKE_BUILD_TYPE=Debug",
-                "-S.",
-                "-Bbuild"
+                "(linux) Cross-compile the ISO library"
             ]
         }
+
     ]
 }

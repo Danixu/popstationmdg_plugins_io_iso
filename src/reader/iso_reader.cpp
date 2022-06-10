@@ -4,12 +4,11 @@
 IsoReader::IsoReader()
 {
     // Set the stream to throw an exception if failbit was set
-    std::ios_base::iostate exceptionMask = input_file.exceptions() | std::ios::failbit;
-    input_file.exceptions(exceptionMask);
+    // std::ios_base::iostate exceptionMask = input_file.exceptions() | std::ios::failbit;
+    // input_file.exceptions(exceptionMask);
 
     // Fake GameID for testing purposes
     gameID = new char[11];
-
     strncpy_s(gameID, 11, "SCES00009", 11);
 
     /*
@@ -50,18 +49,27 @@ IsoReader::~IsoReader()
 }
 
 // Open the ISO file
-bool IsoReader::open(const char *filename, unsigned int threads)
+bool IsoReader::open(char *filename, unsigned int threads)
 {
     // This reader is very simple and non CPU intensive, so threads will be ignored
 
     // Open source file
-    input_file.open(filename, std::ios::in | std::ios::binary);
+    input_file.open(filename, std::ifstream::binary);
     if (!input_file.is_open())
     {
-        char error_msg[] = "There was an error opening the input file";
-        setLastError(error_msg);
+        setLastError(std::string("There was an error opening the input file"));
         return false;
     }
+
+    char *data = new char[204800];
+
+    fprintf(stderr, "Reading from file\n");
+    input_file.read(data, 204800);
+    fprintf(stderr, "Readed: %d...\n", input_file.gcount());
+    fprintf(stderr, "Char: %d\n", data[1]);
+
+    delete[] data;
+
     return true;
 }
 
@@ -75,7 +83,7 @@ bool IsoReader::close()
     }
     catch (std::ios_base::failure &e)
     {
-        setLastError("There was an error closing the file: " + std::string(e.what()));
+        setLastError(std::string("There was an error closing the file: ") + std::string(e.what()));
         return false;
     }
 
@@ -103,8 +111,7 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
 
     if (!input_file.seekg(position, seek_mode))
     {
-        char error_msg[] = "There was an error seeking into the file";
-        setLastError(error_msg);
+        setLastError(std::string("There was an error seeking into the file"));
         return false;
     }
     return true;
@@ -125,8 +132,7 @@ unsigned long long IsoReader::tell()
     }
     else
     {
-        char error_msg[] = "There is no file opened";
-        setLastError(error_msg);
+        setLastError(std::string("There is no file opened"));
         return 0;
     }
 }
@@ -140,7 +146,97 @@ unsigned long long IsoReader::tellCurrentDisk()
 // Get the disk ID (currently a dummy)
 char *IsoReader::getID()
 {
-    return gameID;
+    if (gameID != NULL)
+    {
+        return gameID;
+    }
+    /*
+    else
+    {
+        // Get current position
+        unsigned long long current_pos = tell();
+
+        // There was an error
+        if (!isOK())
+        {
+            setLastError(std::string("There was an error getting the current file position."));
+            return NULL;
+        }
+
+        // Go to the start of the file
+        // if (!seek(0, PluginSeekMode_Begin))
+        //{
+        //    setLastError(std::string("There was an error seeking to the start of the file."));
+        //    return NULL;
+        //}
+
+        // Reserve 200k of RAM to store the disk data
+        uint8_t *disk_data = (uint8_t *)malloc(204800);
+
+        if (disk_data == NULL)
+        {
+            setLastError(std::string("There was an error allocating the required memory."));
+            return NULL;
+        }
+
+        // Testing another file
+        fprintf(stderr, "Read test\n");
+        std::ifstream test_in;
+        test_in.open("C:\\Users\\danix\\Desktop\\aa\\Spyro The Dragon.img", std::ios::binary);
+
+        test_in.read(reinterpret_cast<char *>(disk_data), 200);
+        fprintf(stderr, "Byte: %x\n", disk_data[2]);
+        test_in.close();
+
+        // Read the first 200k of data into the new buffer
+        fprintf(stderr, "Reading...\n");
+        size_t readed = readData(reinterpret_cast<char *>(disk_data), 204800);
+        if (!isOK())
+        {
+            return NULL;
+        }
+
+        fprintf(stderr, "Readed: %d - byte: %x\n", readed, disk_data[2]);
+        // Try to extract the game ID from those 200k
+        for (size_t i = 0; i < readed; i++)
+        {
+            fprintf(stderr, "test: %d\n", disk_data[i]);
+            break;
+            if (
+                disk_data[i] == 0x53 &&
+                (disk_data[i + 1] == 0x43 || disk_data[i + 1] == 'L') &&
+                (disk_data[i + 2] == 0x45 || disk_data[i + 1] == 'U') &&
+                disk_data[i + 3] == 0x53)
+            {
+                // Looks like we found it
+                gameID = new char[10];
+                std::memset(gameID, 0, sizeof(gameID));
+
+                // Set the gameID. Normally in disk is XXXX_XX.XXX, so we will get only the code
+                gameID[0] = disk_data[i];
+                gameID[1] = disk_data[i + 1];
+                gameID[2] = disk_data[i + 2];
+                gameID[3] = disk_data[i + 3];
+                gameID[4] = disk_data[i + 5];
+                gameID[5] = disk_data[i + 6];
+                gameID[6] = disk_data[i + 8];
+                gameID[7] = disk_data[i + 9];
+                gameID[8] = disk_data[i + 10];
+
+                // Free the buffer before return the ID
+                std::free((void *)readed);
+
+                return gameID;
+            }
+        }
+
+        // Nothing was found, so we will free the buffer and return NULL
+        std::free((void *)readed);
+        setLastError(std::string("No ID found."));
+
+        return NULL;
+    }
+    */
 }
 
 // In ISO files the ID and DiskID are the same (is just a disk)
@@ -178,8 +274,7 @@ unsigned int IsoReader::getTotalDisks()
     }
     else
     {
-        char error_msg[] = "There is no file opened";
-        setLastError(error_msg);
+        setLastError(std::string("There is no file opened"));
         return 0;
     }
 }
@@ -193,8 +288,7 @@ unsigned int IsoReader::getCurrentDisk()
     }
     else
     {
-        char error_msg[] = "There is no file opened";
-        setLastError(error_msg);
+        setLastError(std::string("There is no file opened"));
         return 0;
     }
 }
@@ -206,26 +300,21 @@ bool IsoReader::changeCurrentDisk(unsigned int disk)
 }
 
 // Read the input file data into the provided buffer. Return the readed bytes.
-unsigned long long IsoReader::read(unsigned char *output, unsigned long long toRead)
+unsigned long long IsoReader::readData(char *output, unsigned long long toRead)
 {
     if (!input_file.is_open())
     {
         // There is no open file
-        char error_msg[] = "There is no file opened";
-        setLastError(error_msg);
+        setLastError(std::string("There is no file opened"));
         return 0;
     }
 
-    try
+    input_file.read(output, toRead);
+    if (!input_file.good())
     {
-        input_file.read(output, toRead);
-        return input_file.gcount();
+        std::cerr << "Error: " << strerror(errno) << std::endl;
     }
-    catch (std::ios_base::failure &e)
-    {
-        setLastError("There was an error reading the file: " + std::string(e.what()));
-        return 0;
-    }
+    return input_file.gcount();
 }
 
 // Return the compatible extensions.
@@ -299,7 +388,7 @@ extern "C"
         return "0.0.1";
     }
 
-    bool SHARED_EXPORT open(void *handler, const char *filename, unsigned int threads)
+    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int threads)
     {
         IsoReader *object = (IsoReader *)handler;
 
@@ -408,11 +497,11 @@ extern "C"
         return object->changeCurrentDisk(disk);
     }
 
-    unsigned long long SHARED_EXPORT read(void *handler, unsigned char *output, unsigned long long toRead)
+    unsigned long long SHARED_EXPORT readData(void *handler, char *output, unsigned long long toRead)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->read(output, toRead);
+        return object->readData(output, toRead);
     }
 
     const char SHARED_EXPORT *getCompatibleExtensions(void *handler)
