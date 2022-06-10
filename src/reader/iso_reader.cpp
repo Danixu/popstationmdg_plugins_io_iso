@@ -8,8 +8,10 @@ IsoReader::IsoReader()
     // input_file.exceptions(exceptionMask);
 
     // Fake GameID for testing purposes
+    /*
     gameID = new char[11];
     strncpy_s(gameID, 11, "SCES00009", 11);
+    */
 
     /*
         // Buffer Options
@@ -60,15 +62,6 @@ bool IsoReader::open(char *filename, unsigned int threads)
         setLastError(std::string("There was an error opening the input file"));
         return false;
     }
-
-    char *data = new char[204800];
-
-    fprintf(stderr, "Reading from file\n");
-    input_file.read(data, 204800);
-    fprintf(stderr, "Readed: %d...\n", input_file.gcount());
-    fprintf(stderr, "Char: %d\n", data[1]);
-
-    delete[] data;
 
     return true;
 }
@@ -150,7 +143,6 @@ char *IsoReader::getID()
     {
         return gameID;
     }
-    /*
     else
     {
         // Get current position
@@ -164,14 +156,14 @@ char *IsoReader::getID()
         }
 
         // Go to the start of the file
-        // if (!seek(0, PluginSeekMode_Begin))
-        //{
-        //    setLastError(std::string("There was an error seeking to the start of the file."));
-        //    return NULL;
-        //}
+        if (!seek(0, PluginSeekMode_Begin))
+        {
+            setLastError(std::string("There was an error seeking to the start of the file."));
+            return NULL;
+        }
 
         // Reserve 200k of RAM to store the disk data
-        uint8_t *disk_data = (uint8_t *)malloc(204800);
+        char *disk_data = (char *)malloc(204800);
 
         if (disk_data == NULL)
         {
@@ -179,29 +171,16 @@ char *IsoReader::getID()
             return NULL;
         }
 
-        // Testing another file
-        fprintf(stderr, "Read test\n");
-        std::ifstream test_in;
-        test_in.open("C:\\Users\\danix\\Desktop\\aa\\Spyro The Dragon.img", std::ios::binary);
-
-        test_in.read(reinterpret_cast<char *>(disk_data), 200);
-        fprintf(stderr, "Byte: %x\n", disk_data[2]);
-        test_in.close();
-
         // Read the first 200k of data into the new buffer
-        fprintf(stderr, "Reading...\n");
-        size_t readed = readData(reinterpret_cast<char *>(disk_data), 204800);
+        size_t readed = readData(disk_data, 204800);
         if (!isOK())
         {
             return NULL;
         }
 
-        fprintf(stderr, "Readed: %d - byte: %x\n", readed, disk_data[2]);
         // Try to extract the game ID from those 200k
         for (size_t i = 0; i < readed; i++)
         {
-            fprintf(stderr, "test: %d\n", disk_data[i]);
-            break;
             if (
                 disk_data[i] == 0x53 &&
                 (disk_data[i + 1] == 0x43 || disk_data[i + 1] == 'L') &&
@@ -210,7 +189,7 @@ char *IsoReader::getID()
             {
                 // Looks like we found it
                 gameID = new char[10];
-                std::memset(gameID, 0, sizeof(gameID));
+                std::memset(gameID, 0, 10);
 
                 // Set the gameID. Normally in disk is XXXX_XX.XXX, so we will get only the code
                 gameID[0] = disk_data[i];
@@ -219,12 +198,12 @@ char *IsoReader::getID()
                 gameID[3] = disk_data[i + 3];
                 gameID[4] = disk_data[i + 5];
                 gameID[5] = disk_data[i + 6];
-                gameID[6] = disk_data[i + 8];
+                gameID[6] = disk_data[i + 7];
                 gameID[7] = disk_data[i + 9];
                 gameID[8] = disk_data[i + 10];
 
                 // Free the buffer before return the ID
-                std::free((void *)readed);
+                std::free((void *)disk_data);
 
                 return gameID;
             }
@@ -236,7 +215,6 @@ char *IsoReader::getID()
 
         return NULL;
     }
-    */
 }
 
 // In ISO files the ID and DiskID are the same (is just a disk)
