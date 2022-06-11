@@ -4,8 +4,8 @@
 IsoReader::IsoReader()
 {
     // Set the stream to throw an exception if failbit was set
-    // std::ios_base::iostate exceptionMask = input_file.exceptions() | std::ios::failbit;
-    // input_file.exceptions(exceptionMask);
+    std::ios_base::iostate exceptionMask = input_file.exceptions() | std::ifstream::failbit | std::ifstream::badbit;
+    input_file.exceptions(exceptionMask);
 
     // Fake GameID for testing purposes
     /*
@@ -53,22 +53,32 @@ IsoReader::~IsoReader()
 // Open the ISO file
 bool IsoReader::open(char *filename, unsigned int threads)
 {
-    // This reader is very simple and non CPU intensive, so threads will be ignored
+    // This reader is very simple and non CPU intensive, so threads are not required and will be ignored
 
     // Open source file
-    input_file.open(filename, std::ifstream::binary);
-    if (!input_file.is_open())
+    try
     {
-        setLastError(std::string("There was an error opening the input file"));
+        input_file.open(filename, std::ifstream::binary);
+        return true;
+    }
+    catch (std::ios_base::failure &e)
+    {
+        setLastError(std::string("There was an error opening the file: ") + std::string(e.what()));
         return false;
     }
-
-    return true;
 }
 
 // Close the ISO file (if was opened)
 bool IsoReader::close()
 {
+    // Delete the ID which is not usefull anymore
+    if (gameID != NULL)
+    {
+        delete[] gameID;
+        gameID = NULL;
+    }
+
+    // Try to close the file
     try
     {
         input_file.close();
@@ -79,9 +89,6 @@ bool IsoReader::close()
         setLastError(std::string("There was an error closing the file: ") + std::string(e.what()));
         return false;
     }
-
-    // After testing the getID function, this must be uncommented
-    // game_id = "";
 }
 
 // Seek into the file
@@ -145,9 +152,15 @@ char *IsoReader::getID()
     }
     else
     {
+        // No input file
+        if (!input_file.is_open())
+        {
+            setLastError(std::string("There is no file opened"));
+            return NULL;
+        }
+
         // Get current position
         unsigned long long current_pos = tell();
-
         // There was an error
         if (!isOK())
         {
@@ -175,6 +188,15 @@ char *IsoReader::getID()
         size_t readed = readData(disk_data, 204800);
         if (!isOK())
         {
+            std::free((void *)disk_data);
+            return NULL;
+        }
+
+        // return to the last position
+        if (!seek(current_pos, PluginSeekMode_Begin))
+        {
+            setLastError(std::string("There was an error seeking to the start of the file."));
+            std::free((void *)disk_data);
             return NULL;
         }
 
@@ -210,7 +232,7 @@ char *IsoReader::getID()
         }
 
         // Nothing was found, so we will free the buffer and return NULL
-        std::free((void *)readed);
+        std::free((void *)disk_data);
         setLastError(std::string("No ID found."));
 
         return NULL;
@@ -287,12 +309,17 @@ unsigned long long IsoReader::readData(char *output, unsigned long long toRead)
         return 0;
     }
 
-    input_file.read(output, toRead);
-    if (!input_file.good())
+    // Try to read from file
+    try
     {
-        std::cerr << "Error: " << strerror(errno) << std::endl;
+        input_file.read(output, toRead);
+        return input_file.gcount();
     }
-    return input_file.gcount();
+    catch (std::ios_base::failure &e)
+    {
+        setLastError(std::string("There was an error reading from the file: ") + std::string(e.what()));
+        return 0;
+    }
 }
 
 // Return the compatible extensions.
@@ -306,6 +333,7 @@ void IsoReader::setLastError(std::string error)
     if (error.length() > 0)
     {
         char *error_char = new char[error.length() + 1];
+        std::memset(error_char, 0, error.length() + 1);
         strncpy_s(error_char, error.length() + 1, error.c_str(), error.length());
         setLastError(error_char);
     }

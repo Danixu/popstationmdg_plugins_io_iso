@@ -28,20 +28,39 @@ int main()
         }
         fprintf(stderr, "Plugin loaded\n");
         fprintf(stderr, "Auto loaded plugin: %s, version: %s, type: %d\n", ph->getPluginName().c_str(), ph->getPluginVersion().c_str(), ph->getType());
-        fprintf(stderr, "Running plugins getDiskID method:\n");
     }
     for (auto ph : plugins)
     {
         // Load the library functions
+        fprintf(stderr, "Loading internal dll class\n");
         auto plugin = ph->load();
 
         // Open a file to get the data
-        const char *filename = "C:\\Users\\danix\\Desktop\\aa\\Firebugs (Europe).bin";
-        ph->open(filename);
+        fprintf(stderr, "Opening the test file\n");
+        bool opening = ph->open("C:\\Users\\danix\\Desktop\\aa\\Firebugs (Europe)1.bin");
+        if (!opening)
+        {
+            fprintf(stderr, "Error opening: %s\n", ph->getError().c_str());
+        }
+
+        // Get the game ID
+        fprintf(stderr, "Getting the ID\n");
         std::string id_test = ph->getDiskID();
-        fprintf(stderr, "Error: %s\n", ph->getError().c_str());
-        fprintf(stderr, "%s\n", id_test.c_str());
-        ph->close();
+        if (id_test.c_str() != "")
+        {
+            fprintf(stderr, "Error: %s\n", ph->getError().c_str());
+        }
+        else
+        {
+            fprintf(stderr, "%s\n", id_test.c_str());
+        }
+
+        fprintf(stderr, "Closing the test file\n");
+        bool closing = ph->close();
+        if (closing)
+        {
+            fprintf(stderr, "Error: %s\n", ph->getError().c_str());
+        }
     }
 
     return 0;
