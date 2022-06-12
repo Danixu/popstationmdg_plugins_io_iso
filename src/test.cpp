@@ -37,7 +37,7 @@ int main()
 
         // Open a file to get the data
         fprintf(stderr, "Opening the test file\n");
-        bool opening = ph->open("C:\\Users\\danix\\Desktop\\aa\\Firebugs (Europe)1.bin");
+        bool opening = ph->open("test.iso");
         if (!opening)
         {
             fprintf(stderr, "Error opening: %s\n", ph->getError().c_str());
@@ -45,8 +45,8 @@ int main()
 
         // Get the game ID
         fprintf(stderr, "Getting the ID\n");
-        std::string id_test = ph->getDiskID();
-        if (id_test.c_str() != "")
+        std::string id_test = ph->getID();
+        if (id_test.c_str() == "")
         {
             fprintf(stderr, "Error: %s\n", ph->getError().c_str());
         }
@@ -57,7 +57,7 @@ int main()
 
         fprintf(stderr, "Closing the test file\n");
         bool closing = ph->close();
-        if (closing)
+        if (!closing)
         {
             fprintf(stderr, "Error: %s\n", ph->getError().c_str());
         }

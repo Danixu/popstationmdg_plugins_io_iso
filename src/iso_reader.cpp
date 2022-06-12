@@ -214,15 +214,15 @@ char *IsoReader::getID()
                 std::memset(gameID, 0, 10);
 
                 // Set the gameID. Normally in disk is XXXX_XX.XXX, so we will get only the code
-                gameID[0] = disk_data[i];
-                gameID[1] = disk_data[i + 1];
-                gameID[2] = disk_data[i + 2];
-                gameID[3] = disk_data[i + 3];
-                gameID[4] = disk_data[i + 5];
-                gameID[5] = disk_data[i + 6];
-                gameID[6] = disk_data[i + 7];
-                gameID[7] = disk_data[i + 9];
-                gameID[8] = disk_data[i + 10];
+                memcpy(gameID, disk_data + (i), 1);
+                memcpy(gameID + 1, disk_data + (i + 1), 1);
+                memcpy(gameID + 2, disk_data + (i + 2), 1);
+                memcpy(gameID + 3, disk_data + (i + 3), 1);
+                memcpy(gameID + 4, disk_data + (i + 5), 1);
+                memcpy(gameID + 5, disk_data + (i + 6), 1);
+                memcpy(gameID + 6, disk_data + (i + 7), 1);
+                memcpy(gameID + 7, disk_data + (i + 9), 1);
+                memcpy(gameID + 8, disk_data + (i + 10), 1);
 
                 // Free the buffer before return the ID
                 std::free((void *)disk_data);
