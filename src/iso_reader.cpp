@@ -322,12 +322,6 @@ unsigned long long IsoReader::readData(char *output, unsigned long long toRead)
     }
 }
 
-// Return the compatible extensions.
-const char *IsoReader::getCompatibleExtensions()
-{
-    return extensions;
-}
-
 void IsoReader::setLastError(std::string error)
 {
     if (error.length() > 0)
@@ -510,10 +504,9 @@ extern "C"
         return object->readData(output, toRead);
     }
 
-    const char SHARED_EXPORT *getCompatibleExtensions(void *handler)
+    const char SHARED_EXPORT *getCompatibleExtensions()
     {
-        IsoReader *object = (IsoReader *)handler;
-
-        return object->getCompatibleExtensions();
+        // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
+        return (const char *)"iso";
     }
 }

@@ -44,15 +44,11 @@ public:
 
     // Reader
     unsigned long long readData(char *output, unsigned long long toRead); // Read method. Must return the original disk data, after decompress, decode...
-    const char *getCompatibleExtensions();                                // Return a vector of strings with the compatible extensions. Example: ["iso", "bin"]
 
     // FileIO
     std::ifstream input_file;
 
 protected:
-    // compatible extensions for the reader. Use pipe "|" between the extension: "*.iso|*.bin"
-    const char *extensions = "iso";
-
     // Error management
     char *last_error = NULL;
     bool is_ok = true;
@@ -87,7 +83,7 @@ extern "C"
     unsigned int SHARED_EXPORT getCurrentDisk(void *handler);                                          // Return disk that is selected to be readed
     bool SHARED_EXPORT changeCurrentDisk(void *handler, unsigned int disk);                            // Change the disk that will be readed. Returns true if everything is OK and False if anything happens (for example, selected disk doesn't exists).
     unsigned long long SHARED_EXPORT read(void *handler, char *output, unsigned long long toRead);     // Read method. Must return the original disk data, after decompress, decode...
-    const char SHARED_EXPORT *getCompatibleExtensions(void *handler);                                  // Return a vector of strings with the compatible extensions. Example: ["iso", "bin"]
+    const char SHARED_EXPORT *getCompatibleExtensions();                                               // Return a vector of strings with the compatible extensions. Example: ["iso", "bin"]
 }
 
 #endif // _PLUGIN_HPP_H_

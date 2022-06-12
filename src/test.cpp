@@ -35,6 +35,12 @@ int main()
         fprintf(stderr, "Loading internal dll class\n");
         auto plugin = ph->load();
 
+        // Get the known extensions
+        for (auto extension : ph->getCompatibleExtensions())
+        {
+            fprintf(stderr, "Known extension: %s\n", extension.c_str());
+        }
+
         // Open a file to get the data
         fprintf(stderr, "Opening the test file\n");
         bool opening = ph->open("test.iso");
