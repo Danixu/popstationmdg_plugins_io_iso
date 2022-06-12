@@ -51,7 +51,7 @@ IsoReader::~IsoReader()
 }
 
 // Open the ISO file
-bool IsoReader::open(char *filename, unsigned int threads)
+bool IsoReader::openReader(char *filename, unsigned int threads)
 {
     // This reader is very simple and non CPU intensive, so threads are not required and will be ignored
 
@@ -304,7 +304,7 @@ unsigned long long IsoReader::readData(char *output, unsigned long long toRead)
 {
     if (!input_file.is_open())
     {
-        // There is no open file
+        // There is no opened file
         setLastError(std::string("There is no file opened"));
         return 0;
     }
@@ -388,11 +388,11 @@ extern "C"
         return "0.0.1";
     }
 
-    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int threads)
+    bool SHARED_EXPORT openReader(void *handler, char *filename, unsigned int threads)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->open(filename, threads);
+        return object->openReader(filename, threads);
     }
 
     bool SHARED_EXPORT close(void *handler)

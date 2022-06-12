@@ -25,7 +25,6 @@ public:
     ~IsoReader();
 
     // Common
-    bool open(char *filename, unsigned int threads = 1);                  // Open the source/destination file
     bool close();                                                         // The plugin must flush, write, cleanup... when this method is called
     bool seek(unsigned long long position, unsigned int mode);            // Seek method for the entire file
     bool seekCurrentDisk(unsigned long long position, unsigned int mode); // Seek method for the current disk
@@ -43,6 +42,7 @@ public:
     void setLastError(char *error);
 
     // Reader
+    bool openReader(char *filename, unsigned int threads = 1);            // Open the source/destination file
     unsigned long long readData(char *output, unsigned long long toRead); // Read method. Must return the original disk data, after decompress, decode...
 
     // FileIO
@@ -66,7 +66,7 @@ extern "C"
     const char SHARED_EXPORT *getPluginName();
     const char SHARED_EXPORT *getPluginVersion();
 
-    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int threads = 1);                  // Open the source/destination file
+    
     bool SHARED_EXPORT close(void *handler);                                                           // The plugin must flush, write, cleanup... when this method is called
     bool SHARED_EXPORT seek(void *handler, unsigned long long position, unsigned int mode);            // Seek method for the entire file
     bool SHARED_EXPORT seekCurrentDisk(void *handler, unsigned long long position, unsigned int mode); // Seek method for the current disk
@@ -82,6 +82,7 @@ extern "C"
     unsigned int SHARED_EXPORT getTotalDisks(void *handler);                                           // Return the total disks in this input/output file
     unsigned int SHARED_EXPORT getCurrentDisk(void *handler);                                          // Return disk that is selected to be readed
     bool SHARED_EXPORT changeCurrentDisk(void *handler, unsigned int disk);                            // Change the disk that will be readed. Returns true if everything is OK and False if anything happens (for example, selected disk doesn't exists).
+    bool SHARED_EXPORT openReader(void *handler, char *filename, unsigned int threads = 1);            // Open the source file
     unsigned long long SHARED_EXPORT read(void *handler, char *output, unsigned long long toRead);     // Read method. Must return the original disk data, after decompress, decode...
     const char SHARED_EXPORT *getCompatibleExtensions();                                               // Return a vector of strings with the compatible extensions. Example: ["iso", "bin"]
 }
