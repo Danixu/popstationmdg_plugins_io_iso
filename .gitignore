@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# Logfiles
+**.log
+
 # build and binary folders
 build/
 bin/

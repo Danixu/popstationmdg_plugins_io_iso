@@ -144,19 +144,21 @@ unsigned long long IsoReader::tellCurrentDisk()
 }
 
 // Get the disk ID (currently a dummy)
-char *IsoReader::getID()
+bool IsoReader::getID(char *id, unsigned long long buffersize)
 {
-    if (gameID != NULL)
+    if (buffersize < 10)
     {
-        return gameID;
+        setLastError(std::string("The output buffer size is too small"));
+        return false;
     }
-    else
+
+    if (gameID == NULL)
     {
         // No input file
         if (!input_file.is_open())
         {
             setLastError(std::string("There is no file opened"));
-            return NULL;
+            return false;
         }
 
         // Get current position
@@ -165,23 +167,23 @@ char *IsoReader::getID()
         if (!isOK())
         {
             setLastError(std::string("There was an error getting the current file position."));
-            return NULL;
+            return false;
         }
 
         // Go to the start of the file
         if (!seek(0, PluginSeekMode_Begin))
         {
             setLastError(std::string("There was an error seeking to the start of the file."));
-            return NULL;
+            return false;
         }
 
         // Reserve 200k of RAM to store the disk data
-        char *disk_data = (char *)malloc(204800);
+        char *disk_data = (char *)std::malloc(204800);
 
         if (disk_data == NULL)
         {
             setLastError(std::string("There was an error allocating the required memory."));
-            return NULL;
+            return false;
         }
 
         // Read the first 200k of data into the new buffer
@@ -189,7 +191,7 @@ char *IsoReader::getID()
         if (!isOK())
         {
             std::free((void *)disk_data);
-            return NULL;
+            return false;
         }
 
         // return to the last position
@@ -197,7 +199,7 @@ char *IsoReader::getID()
         {
             setLastError(std::string("There was an error seeking to the start of the file."));
             std::free((void *)disk_data);
-            return NULL;
+            return false;
         }
 
         // Try to extract the game ID from those 200k
@@ -223,26 +225,26 @@ char *IsoReader::getID()
                 memcpy(gameID + 6, disk_data + (i + 7), 1);
                 memcpy(gameID + 7, disk_data + (i + 9), 1);
                 memcpy(gameID + 8, disk_data + (i + 10), 1);
-
-                // Free the buffer before return the ID
-                std::free((void *)disk_data);
-
-                return gameID;
             }
         }
 
         // Nothing was found, so we will free the buffer and return NULL
         std::free((void *)disk_data);
-        setLastError(std::string("No ID found."));
-
-        return NULL;
+        if (gameID == NULL)
+        {
+            setLastError(std::string("No ID found."));
+            return false;
+        }
     }
+
+    strncpy_s(id, 10, gameID, 10);
+    return true;
 }
 
 // In ISO files the ID and DiskID are the same (is just a disk)
-char *IsoReader::getDiskID()
+bool IsoReader::getDiskID(char *id, unsigned long long buffersize)
 {
-    return getID();
+    return getID(id, buffersize);
 }
 
 // Check if Status is OK
@@ -252,9 +254,22 @@ bool IsoReader::isOK()
 }
 
 // Get the last error
-char *IsoReader::getError()
+bool IsoReader::getError(char *error, unsigned long long buffersize)
 {
-    return last_error;
+    if (strlen(last_error) > buffersize)
+    {
+        setLastError(std::string("The output buffer size is too small"));
+        return false;
+    }
+
+    if (strncpy_s(error, buffersize, last_error, strlen(last_error)))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // Clear the last error and isOK status
@@ -324,26 +339,35 @@ unsigned long long IsoReader::readData(char *output, unsigned long long toRead)
 
 void IsoReader::setLastError(std::string error)
 {
-    if (error.length() > 0)
+    size_t value_length = error.length() + 1;
+    // If string is not empty
+    if (value_length > 1)
     {
-        char *error_char = new char[error.length() + 1];
-        std::memset(error_char, 0, error.length() + 1);
-        strncpy_s(error_char, error.length() + 1, error.c_str(), error.length());
-        setLastError(error_char);
+        if (last_error != NULL)
+        {
+            delete[] last_error;
+        }
+
+        last_error = new char[value_length];
+        memset(last_error, 0, value_length);
+
+        strncpy_s(last_error, value_length, error.c_str(), error.length());
     }
 }
 
 // Set the last error text and isOK to false
 void IsoReader::setLastError(char *error)
 {
-    if (last_error != NULL)
+    if (error != NULL)
     {
-        delete[] last_error;
-        last_error = NULL;
-    }
+        if (last_error != NULL)
+        {
+            delete[] last_error;
+        }
 
-    last_error = error;
-    is_ok = false;
+        last_error = error;
+        is_ok = false;
+    }
 }
 
 extern "C"
@@ -375,17 +399,47 @@ extern "C"
     //
     // Return the plugin name
     //
-    const char SHARED_EXPORT *getPluginName()
+    bool SHARED_EXPORT getPluginName(char *name, unsigned long long buffersize)
     {
-        return "ISO Image";
+        // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
+        const char pn[] = "ISO Image";
+
+        if (sizeof(pn) > buffersize)
+        {
+            return false;
+        }
+
+        if (strncpy_s(name, buffersize, pn, sizeof(pn)))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     //
     // Return the plugin version
     //
-    const char SHARED_EXPORT *getPluginVersion()
+    bool SHARED_EXPORT getPluginVersion(char *version, unsigned long long buffersize)
     {
-        return "0.0.1";
+        // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
+        const char pv[] = "0.0.1";
+
+        if (sizeof(pv) > buffersize)
+        {
+            return false;
+        }
+
+        if (strncpy_s(version, buffersize, pv, sizeof(pv)))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     bool SHARED_EXPORT openReader(void *handler, char *filename, unsigned int threads)
@@ -430,29 +484,29 @@ extern "C"
         return object->tellCurrentDisk();
     }
 
-    char SHARED_EXPORT *getID(void *handler)
+    bool SHARED_EXPORT getID(void *handler, char *id, unsigned long long buffersize)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->getID();
+        return object->getID(id, buffersize);
     }
 
-    char SHARED_EXPORT *getDiskID(void *handler)
+    bool SHARED_EXPORT getDiskID(void *handler, char *id, unsigned long long buffersize)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->getDiskID();
+        return object->getDiskID(id, buffersize);
     }
 
     // ISO Images doesn't have any information about title
-    char SHARED_EXPORT *getTitle(void *handler)
+    bool SHARED_EXPORT getTitle(void *handler, char *title, unsigned long long buffersize)
     {
-        return NULL;
+        return false;
     }
 
-    char SHARED_EXPORT *getDiskTitle(void *handler)
+    bool SHARED_EXPORT getDiskTitle(void *handler, char *title, unsigned long long buffersize)
     {
-        return NULL;
+        return false;
     }
 
     bool SHARED_EXPORT isOK(void *handler)
@@ -462,11 +516,11 @@ extern "C"
         return object->isOK();
     }
 
-    char SHARED_EXPORT *getError(void *handler)
+    bool SHARED_EXPORT getError(void *handler, char *error, unsigned long long buffersize)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->getError();
+        return object->getError(error, buffersize);
     }
 
     void SHARED_EXPORT clearError(void *handler)
@@ -504,9 +558,23 @@ extern "C"
         return object->readData(output, toRead);
     }
 
-    const char SHARED_EXPORT *getCompatibleExtensions()
+    bool SHARED_EXPORT getCompatibleExtensions(char *extensions, unsigned long long buffersize)
     {
         // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
-        return (const char *)"iso";
+        const char ext[] = "iso";
+
+        if (sizeof(ext) > buffersize)
+        {
+            return false;
+        }
+
+        if (strncpy_s(extensions, buffersize, ext, sizeof(ext)))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

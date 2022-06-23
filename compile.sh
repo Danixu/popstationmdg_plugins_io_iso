@@ -12,9 +12,9 @@ mkdir -p bin/linux
 
 # Compile the library
 echo "Compiling the Linux version"
-#g++ -O3 -Iinclude -Ithirdparty/popstationmdg/src/plugins/ -std=c++17 -fPIC -g -static-libgcc -static-libstdc++ -c src/iso_reader.cpp -o build/linux/iso_reader.o
-#g++ -O3 -std=c++17 -ffunction-sections -fdata-sections -shared -o bin/linux/iso_reader.so build/linux/iso_reader.o
-#cp data/test.iso bin/linux/test.iso
+g++ -O3 -Iinclude -Ithirdparty/popstationmdg/src/plugins/ -std=c++17 -ffunction-sections -fPIC -g -static-libgcc -static-libstdc++ -shared src/iso_reader.cpp -o bin/linux/iso_reader.so
+g++ -g -Ithirdparty/popstationmdg/src/plugins/ thirdparty/popstationmdg/src/plugins/export.cpp thirdparty/popstationmdg/src/logger/logger.cpp thirdparty/popstationmdg/src/plugins/plugin_handler.cpp -ldl -pthread src/test.cpp -static-libgcc -static-libstdc++ -std=c++17 -o bin/linux/test
+cp data/test.iso bin/linux/test.iso
 
 
 ###################

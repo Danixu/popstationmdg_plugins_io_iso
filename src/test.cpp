@@ -16,7 +16,7 @@
 int main()
 {
 
-    auto plugins = load_plugins("C:/Users/danix/Desktop/PopStation MD Info/popstationmdg_plugins/popstationmdg_plugins_iso/bin/windows", EXT);
+    auto plugins = load_plugins("./", EXT);
     for (auto ph : plugins)
     {
         fprintf(stderr, "Loading plugin...\n");
@@ -51,7 +51,7 @@ int main()
 
         // Get the game ID
         fprintf(stderr, "Getting the ID\n");
-        std::string id_test = ph->getID();
+        std::string id_test = ph->getGameID();
         if (id_test.c_str() == "")
         {
             fprintf(stderr, "Error: %s\n", ph->getError().c_str());
