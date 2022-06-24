@@ -256,13 +256,14 @@ bool IsoReader::isOK()
 // Get the last error
 bool IsoReader::getError(char *error, unsigned long long buffersize)
 {
-    if (strlen(last_error) > buffersize)
+    size_t error_size = strlen(last_error);
+    if (error_size > buffersize)
     {
         setLastError(std::string("The output buffer size is too small"));
         return false;
     }
 
-    if (strncpy_s(error, buffersize, last_error, strlen(last_error)))
+    if (!strncpy_s(error, buffersize, last_error, error_size))
     {
         return true;
     }
@@ -409,7 +410,7 @@ extern "C"
             return false;
         }
 
-        if (strncpy_s(name, buffersize, pn, sizeof(pn)))
+        if (!strncpy_s(name, buffersize, pn, sizeof(pn)))
         {
             return true;
         }
@@ -432,7 +433,7 @@ extern "C"
             return false;
         }
 
-        if (strncpy_s(version, buffersize, pv, sizeof(pv)))
+        if (!strncpy_s(version, buffersize, pv, sizeof(pv)))
         {
             return true;
         }
@@ -568,7 +569,7 @@ extern "C"
             return false;
         }
 
-        if (strncpy_s(extensions, buffersize, ext, sizeof(ext)))
+        if (!strncpy_s(extensions, buffersize, ext, sizeof(ext)))
         {
             return true;
         }
