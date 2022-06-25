@@ -256,20 +256,27 @@ bool IsoReader::isOK()
 // Get the last error
 bool IsoReader::getError(char *error, unsigned long long buffersize)
 {
-    size_t error_size = strlen(last_error);
-    if (error_size > buffersize)
+    if (last_error != NULL)
     {
-        setLastError(std::string("The output buffer size is too small"));
-        return false;
-    }
+        size_t error_size = strlen(last_error);
+        if (error_size > buffersize)
+        {
+            setLastError(std::string("The output buffer size is too small"));
+            return false;
+        }
 
-    if (!strncpy_s(error, buffersize, last_error, error_size))
-    {
-        return true;
+        if (!strncpy_s(error, buffersize, last_error, error_size))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     else
     {
-        return false;
+        return true;
     }
 }
 
@@ -312,7 +319,7 @@ unsigned int IsoReader::getCurrentDisk()
 // ChangeCurrentDisk is not available for this format.
 bool IsoReader::changeCurrentDisk(unsigned int disk)
 {
-    return false;
+    return true;
 }
 
 // Read the input file data into the provided buffer. Return the readed bytes.
@@ -499,15 +506,15 @@ extern "C"
         return object->getDiskID(id, buffersize);
     }
 
-    // ISO Images doesn't have any information about title
+    // ISO Images doesn't have any information about title. Just return true.
     bool SHARED_EXPORT getTitle(void *handler, char *title, unsigned long long buffersize)
     {
-        return false;
+        return true;
     }
 
     bool SHARED_EXPORT getDiskTitle(void *handler, char *title, unsigned long long buffersize)
     {
-        return false;
+        return true;
     }
 
     bool SHARED_EXPORT isOK(void *handler)
