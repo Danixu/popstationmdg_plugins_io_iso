@@ -338,7 +338,7 @@ extern "C"
     //
     unsigned int SHARED_EXPORT getType()
     {
-        return PTReader;
+        return PTReader | PTWriter;
     }
 
     //
