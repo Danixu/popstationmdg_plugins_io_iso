@@ -23,6 +23,10 @@ unsigned long long IsoReader::writeData(char *input, unsigned long long inputSiz
     }
 }
 
+void IsoReader::freeWriterResources()
+{
+}
+
 extern "C"
 {
     // This format doesn't support multidisk feature
