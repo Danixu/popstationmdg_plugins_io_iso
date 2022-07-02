@@ -13,12 +13,12 @@
 #define EXT ".so"
 #endif
 
-Logging::Logger pLogger = Logging::Logger(Logging::LOG_IN_FILE, Logging::LOG_LEVEL_WARNING, std::string("./test_reader.log"));
+Logging::Logger pLogger = Logging::Logger(Logging::LOG_IN_FILE, Logging::LOG_LEVEL_WARNING, std::string("./test_writer.log"));
 
 int main()
 {
 
-    auto plugins = load_plugins("./", EXT, PTReader);
+    auto plugins = load_plugins("./", EXT, PTWriter);
     for (auto ph : plugins)
     {
         fprintf(stderr, "Loading plugin...\n");
@@ -45,22 +45,23 @@ int main()
 
         // Open a file to get the data
         fprintf(stderr, "Opening the test file\n");
-        bool opening = ph->open("test.iso");
+        bool opening = ph->open("test_write.iso", true);
         if (!opening)
         {
             fprintf(stderr, "Error opening: %s\n", ph->getError().c_str());
         }
 
         // Get the game ID
-        fprintf(stderr, "Getting the ID\n");
-        std::string id_test = ph->getGameID();
-        if (id_test.c_str() == "")
+        fprintf(stderr, "Writing data into the file\n");
+        char dataToWrite[] = "Hello my friend\0";
+
+        if (!ph->writeData(dataToWrite, sizeof(dataToWrite)))
         {
             fprintf(stderr, "Error: %s\n", ph->getError().c_str());
         }
         else
         {
-            fprintf(stderr, "%s\n", id_test.c_str());
+            fprintf(stderr, "Data was writen correctly\n");
         }
 
         fprintf(stderr, "Closing the test file\n");

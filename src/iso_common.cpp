@@ -48,16 +48,19 @@ IsoReader::~IsoReader()
 }
 
 // Open the ISO file
-bool IsoReader::open(char *filename, unsigned int threads, bool writer)
+bool IsoReader::open(char *filename, bool writer, unsigned int threads)
 {
     // This writer is very simple and non CPU intensive, so threads are not required and will be ignored
 
     // Set the writer mode
     isWriter = writer;
 
+    fprintf(stderr, "Opening the file\n");
+
     if (writer)
     {
         // Open the destination file
+        fprintf(stderr, "Writer\n");
         try
         {
             output_file.open(filename, std::ifstream::binary);
@@ -66,6 +69,7 @@ bool IsoReader::open(char *filename, unsigned int threads, bool writer)
         catch (std::ios_base::failure &e)
         {
             setLastError(std::string("There was an error opening the file: ") + std::string(e.what()));
+            fprintf(stderr, "There was an error opening the file: %s\n", std::string(e.what()));
             return false;
         }
     }
@@ -74,12 +78,14 @@ bool IsoReader::open(char *filename, unsigned int threads, bool writer)
         // Open source file
         try
         {
+            fprintf(stderr, "Reader\n");
             input_file.open(filename, std::ifstream::binary);
             return true;
         }
         catch (std::ios_base::failure &e)
         {
             setLastError(std::string("There was an error opening the file: ") + std::string(e.what()));
+            fprintf(stderr, "There was an error opening the file: %s\n", std::string(e.what()));
             return false;
         }
     }
@@ -140,18 +146,44 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
     }
     else if (mode == PluginSeekMode_Forward)
     {
-        position += input_file.tellg();
+        if (isWriter)
+        {
+            position += output_file.tellp();
+        }
+        else
+        {
+            position += input_file.tellg();
+        }
     }
     else if (mode == PluginSeekMode_Backward)
     {
-        position = uint64_t(input_file.tellg()) - position;
+        if (isWriter)
+        {
+            position = uint64_t(output_file.tellp()) - position;
+        }
+        else
+        {
+            position = uint64_t(input_file.tellg()) - position;
+        }
     }
 
-    if (!input_file.seekg(position, seek_mode))
+    if (isWriter)
     {
-        setLastError(std::string("There was an error seeking into the file"));
-        return false;
+        if (!output_file.seekp(position, seek_mode))
+        {
+            setLastError(std::string("There was an error seeking into the file"));
+            return false;
+        }
     }
+    else
+    {
+        if (!input_file.seekg(position, seek_mode))
+        {
+            setLastError(std::string("There was an error seeking into the file"));
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -164,14 +196,29 @@ bool IsoReader::seekCurrentDisk(unsigned long long position, unsigned int mode)
 // Get the current image position
 unsigned long long IsoReader::tell()
 {
-    if (input_file.is_open())
+    if (isWriter)
     {
-        return input_file.tellg();
+        if (output_file.is_open())
+        {
+            return output_file.tellp();
+        }
+        else
+        {
+            setLastError(std::string("There is no file opened"));
+            return 0;
+        }
     }
     else
     {
-        setLastError(std::string("There is no file opened"));
-        return 0;
+        if (input_file.is_open())
+        {
+            return input_file.tellg();
+        }
+        else
+        {
+            setLastError(std::string("There is no file opened"));
+            return 0;
+        }
     }
 }
 
@@ -190,23 +237,19 @@ bool IsoReader::isOK()
 // Get the last error
 bool IsoReader::getError(char *error, unsigned long long buffersize)
 {
+    // Fill the error buffer with zeroes
+    memset(error, 0, buffersize);
     if (last_error != NULL)
     {
         size_t error_size = strlen(last_error);
         if (error_size > buffersize)
         {
-            setLastError(std::string("The output buffer size is too small"));
+            fprintf(stderr, "The output buffer size is too small\n");
             return false;
         }
 
-        if (!strncpy_s(error, buffersize, last_error, error_size))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        strncpy_s(error, buffersize, last_error, error_size);
+        return true;
     }
     else
     {
@@ -239,6 +282,7 @@ void IsoReader::setLastError(std::string error)
 
         last_error = new char[value_length];
         memset(last_error, 0, value_length);
+        fprintf(stderr, "Error: %s\n", error.c_str());
 
         strncpy_s(last_error, value_length, error.c_str(), error.length());
     }
@@ -255,6 +299,7 @@ void IsoReader::setLastError(char *error)
         }
 
         last_error = error;
+        fprintf(stderr, "Error: %s\n", error);
         isOk = false;
     }
 }
@@ -354,14 +399,8 @@ extern "C"
             return false;
         }
 
-        if (!strncpy_s(name, buffersize, pn, sizeof(pn)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        strncpy_s(name, buffersize, pn, sizeof(pn));
+        return true;
     }
 
     //
@@ -377,21 +416,15 @@ extern "C"
             return false;
         }
 
-        if (!strncpy_s(version, buffersize, pv, sizeof(pv)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        strncpy_s(version, buffersize, pv, sizeof(pv));
+        return true;
     }
 
-    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int threads, bool writer)
+    bool SHARED_EXPORT open(void *handler, char *filename, bool writer, unsigned int threads)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->open(filename, threads, writer);
+        return object->open(filename, writer, threads);
     }
 
     bool SHARED_EXPORT close(void *handler)
@@ -432,14 +465,8 @@ extern "C"
             return false;
         }
 
-        if (!strncpy_s(extensions, buffersize, ext, sizeof(ext)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        strncpy_s(extensions, buffersize, ext, sizeof(ext));
+        return true;
     }
 
     unsigned int SHARED_EXPORT getCurrentDisk(void *handler)
