@@ -132,6 +132,23 @@ bool IsoReader::close()
 // Seek into the file
 bool IsoReader::seek(unsigned long long position, unsigned int mode)
 {
+    if (pluginMode & PTWriter)
+    {
+        if (!output_file.is_open())
+        {
+            setLastError(std::string("There is no file opened"));
+            return 0;
+        }
+    }
+    else
+    {
+        if (!input_file.is_open())
+        {
+            setLastError(std::string("There is no file opened"));
+            return 0;
+        }
+    }
+
     auto seek_mode = std::ios::beg;
 
     if (mode == PluginSeekMode_End)
@@ -171,9 +188,17 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
     }
     else
     {
-        if (!input_file.seekg(position, seek_mode))
+        try
         {
-            setLastError(std::string("There was an error seeking into the file"));
+            if (!input_file.seekg(position, seek_mode))
+            {
+                setLastError(std::string("There was an error seeking into the file"));
+                return false;
+            }
+        }
+        catch (std::ios_base::failure &e)
+        {
+            setLastError(std::string("There was an error seeking into the file: ") + std::string(e.what()));
             return false;
         }
     }
@@ -294,6 +319,7 @@ void IsoReader::setLastError(char *error)
         last_error = error;
         isOk = false;
     }
+    fprintf(stderr, "ISO ERROR: %s\n", last_error);
 }
 
 unsigned int IsoReader::getCurrentDisk()
