@@ -31,7 +31,7 @@ IsoReader::IsoReader()
 IsoReader::~IsoReader()
 {
     // Free the resources
-    if (isWriter)
+    if (pluginMode & PTWriter)
     {
         freeWriterResources();
     }
@@ -48,19 +48,16 @@ IsoReader::~IsoReader()
 }
 
 // Open the ISO file
-bool IsoReader::open(char *filename, bool writer, unsigned int threads)
+bool IsoReader::open(char *filename, unsigned int mode, unsigned int threads)
 {
     // This writer is very simple and non CPU intensive, so threads are not required and will be ignored
 
     // Set the writer mode
-    isWriter = writer;
+    pluginMode = (PluginType)mode;
 
-    fprintf(stderr, "Opening the file\n");
-
-    if (writer)
+    if (pluginMode & PTWriter)
     {
         // Open the destination file
-        fprintf(stderr, "Writer\n");
         try
         {
             output_file.open(filename, std::ifstream::binary);
@@ -69,28 +66,25 @@ bool IsoReader::open(char *filename, bool writer, unsigned int threads)
         catch (std::ios_base::failure &e)
         {
             setLastError(std::string("There was an error opening the file: ") + std::string(e.what()));
-            fprintf(stderr, "There was an error opening the file: %s\n", std::string(e.what()));
             return false;
         }
     }
-    else
+    else if (pluginMode & PTReader)
     {
         // Open source file
         try
         {
-            fprintf(stderr, "Reader\n");
             input_file.open(filename, std::ifstream::binary);
             return true;
         }
         catch (std::ios_base::failure &e)
         {
             setLastError(std::string("There was an error opening the file: ") + std::string(e.what()));
-            fprintf(stderr, "There was an error opening the file: %s\n", std::string(e.what()));
             return false;
         }
     }
 
-    return true;
+    return false;
 }
 
 // Close the ISO file (if was opened)
@@ -146,7 +140,7 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
     }
     else if (mode == PluginSeekMode_Forward)
     {
-        if (isWriter)
+        if (pluginMode & PTWriter)
         {
             position += output_file.tellp();
         }
@@ -157,7 +151,7 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
     }
     else if (mode == PluginSeekMode_Backward)
     {
-        if (isWriter)
+        if (pluginMode & PTWriter)
         {
             position = uint64_t(output_file.tellp()) - position;
         }
@@ -167,7 +161,7 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
         }
     }
 
-    if (isWriter)
+    if (pluginMode & PTWriter)
     {
         if (!output_file.seekp(position, seek_mode))
         {
@@ -196,7 +190,7 @@ bool IsoReader::seekCurrentDisk(unsigned long long position, unsigned int mode)
 // Get the current image position
 unsigned long long IsoReader::tell()
 {
-    if (isWriter)
+    if (pluginMode & PTWriter)
     {
         if (output_file.is_open())
         {
@@ -282,7 +276,6 @@ void IsoReader::setLastError(std::string error)
 
         last_error = new char[value_length];
         memset(last_error, 0, value_length);
-        fprintf(stderr, "Error: %s\n", error.c_str());
 
         strncpy_s(last_error, value_length, error.c_str(), error.length());
     }
@@ -299,14 +292,13 @@ void IsoReader::setLastError(char *error)
         }
 
         last_error = error;
-        fprintf(stderr, "Error: %s\n", error);
         isOk = false;
     }
 }
 
 unsigned int IsoReader::getCurrentDisk()
 {
-    if (isWriter)
+    if (pluginMode & PTWriter)
     {
         if (output_file.is_open())
         {
@@ -334,7 +326,7 @@ unsigned int IsoReader::getCurrentDisk()
 
 unsigned int IsoReader::getTotalDisks()
 {
-    if (isWriter)
+    if (pluginMode & PTWriter)
     {
         if (output_file.is_open())
         {
@@ -367,7 +359,8 @@ extern "C"
     //
     void SHARED_EXPORT *load()
     {
-        return (void *)new IsoReader();
+        void *ptr = (void *)new IsoReader();
+        return ptr;
     }
 
     //
@@ -420,11 +413,11 @@ extern "C"
         return true;
     }
 
-    bool SHARED_EXPORT open(void *handler, char *filename, bool writer, unsigned int threads)
+    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int mode, unsigned int threads)
     {
         IsoReader *object = (IsoReader *)handler;
 
-        return object->open(filename, writer, threads);
+        return object->open(filename, mode, threads);
     }
 
     bool SHARED_EXPORT close(void *handler)

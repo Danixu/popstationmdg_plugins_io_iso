@@ -45,7 +45,7 @@ int main()
 
         // Open a file to get the data
         fprintf(stderr, "Opening the test file\n");
-        bool opening = ph->open("test_write.iso", true);
+        bool opening = ph->open("test_write.iso", PTWriter);
         if (!opening)
         {
             fprintf(stderr, "Error opening: %s\n", ph->getError().c_str());

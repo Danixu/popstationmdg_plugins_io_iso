@@ -25,7 +25,7 @@ public:
     ~IsoReader();
 
     // Common
-    bool open(char *filename, bool writer = false, unsigned int threads = 1);
+    bool open(char *filename, unsigned int mode = PTReader, unsigned int threads = 1);
     bool close();
     bool isOK();
     bool getError(char *error, unsigned long long buffersize);
@@ -60,7 +60,7 @@ protected:
     std::string getDiskFilename(uint8_t diskNumber);
     char *last_error = NULL;
     bool isOk = true;
-    bool isWriter = false;
+    PluginType pluginMode = PTNone;
 
     // ID
     char *gameID = NULL;
@@ -79,7 +79,7 @@ extern "C"
     unsigned int SHARED_EXPORT getType();
     bool SHARED_EXPORT getPluginName(char *name, unsigned long long buffersize);
     bool SHARED_EXPORT getPluginVersion(char *version, unsigned long long buffersize);
-    bool SHARED_EXPORT open(void *handler, char *filename, bool writer = false, unsigned int threads = 1);
+    bool SHARED_EXPORT open(void *handler, char *filename, unsigned int mode = PTReader, unsigned int threads = 1);
     bool SHARED_EXPORT close(void *handler);
     bool SHARED_EXPORT isOK(void *handler);
     bool SHARED_EXPORT getError(void *handler, char *error, unsigned long long buffersize);
