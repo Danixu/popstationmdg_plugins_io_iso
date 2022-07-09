@@ -6,25 +6,36 @@ unsigned long long IsoReader::writeData(char *input, unsigned long long inputSiz
     if (!output_file.is_open())
     {
         // There is no opened file
-        setLastError(std::string("There is no file opened"));
+        if (log != nullptr)
+            log->error("There is no output file opened.", __METHOD_NAME__);
+        setLastError(std::string("There is no output file opened"));
         return 0;
     }
 
     // Try to read from file
     try
     {
+        if (log != nullptr)
+            log->trace(std::string("Writing ").append(std::to_string(inputSize)).append(" bytes to output file."), __METHOD_NAME__);
         output_file.write(input, inputSize);
         return inputSize; // If nothing has failed, then all the data was writen.
     }
     catch (std::ios_base::failure &e)
     {
-        setLastError(std::string("There was an error reading from the file: ") + std::string(e.what()));
+        if (log != nullptr)
+            log->error(std::string("There was an error reading from the file: ").append(e.what()), __METHOD_NAME__);
+        setLastError(std::string("There was an error reading from the file: ").append(e.what()));
         return 0;
     }
 }
 
 void IsoReader::freeWriterResources()
 {
+    if (log != nullptr)
+        log->debug("Freeing the writer resources", __METHOD_NAME__);
+
+    if (log != nullptr)
+        log->debug("Done.", __METHOD_NAME__);
 }
 
 extern "C"

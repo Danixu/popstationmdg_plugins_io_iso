@@ -49,7 +49,7 @@ IsoReader::~IsoReader()
     else
     {
         if (log != nullptr)
-            log->debug("Plugin is in reader mode. Freeing writter resources.", __METHOD_NAME__);
+            log->debug("Plugin is in reader mode. Freeing reader resources.", __METHOD_NAME__);
         freeReaderResources();
     }
 
@@ -204,7 +204,7 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
         {
             if (log != nullptr)
                 log->error("There is no output file opened.", __METHOD_NAME__);
-            setLastError(std::string("There is no file opened"));
+            setLastError(std::string("There is no output file opened"));
             return false;
         }
     }
@@ -223,10 +223,14 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
 
     if (mode == PluginSeekMode_End)
     {
+        if (log != nullptr)
+            log->debug("Seeking from the end of file.", __METHOD_NAME__);
         seek_mode = std::ios::end;
     }
     else if (mode == PluginSeekMode_Forward)
     {
+        if (log != nullptr)
+            log->debug("Seeking forward.", __METHOD_NAME__);
         position += tell();
     }
     else if (mode == PluginSeekMode_Backward)
@@ -241,6 +245,8 @@ bool IsoReader::seek(unsigned long long position, unsigned int mode)
         }
         else
         {
+            if (log != nullptr)
+                log->debug("Seeking backward.", __METHOD_NAME__);
             position = tell() - position;
         }
     }
