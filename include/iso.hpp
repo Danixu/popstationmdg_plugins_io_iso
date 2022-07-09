@@ -13,6 +13,7 @@
 
 #include "export.h"
 #include "plugin_assistant.hpp"
+#include "Logger.h"
 
 #ifndef _PLUGIN_HPP_H_
 #define _PLUGIN_HPP_H_
@@ -21,7 +22,7 @@ class IsoReader
 {
 public:
     // Constructor and destructor
-    IsoReader();
+    IsoReader(void *logger = nullptr);
     ~IsoReader();
 
     // Common
@@ -58,23 +59,26 @@ protected:
     void freeReaderResources();
     void freeWriterResources();
     std::string getDiskFilename(uint8_t diskNumber);
-    char *last_error = NULL;
+    char *last_error = nullptr;
     bool isOk = true;
     PluginType pluginMode = PTNone;
 
     // ID
-    char *gameID = NULL;
+    char *gameID = nullptr;
 
     // FileIO
     std::ifstream input_file;
     std::ofstream output_file;
+
+    // Logger
+    Logging::Logger *log;
 };
 
 // C functions definition
 extern "C"
 {
     // Common
-    void SHARED_EXPORT *load();
+    void SHARED_EXPORT *load(void *logger = nullptr);
     void SHARED_EXPORT unload(void *ptr);
     unsigned int SHARED_EXPORT getType();
     bool SHARED_EXPORT getPluginName(char *name, unsigned long long buffersize);

@@ -87,6 +87,7 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "cerrno": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "source_location": "cpp"
     }
 }

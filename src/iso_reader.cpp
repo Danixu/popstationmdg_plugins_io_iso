@@ -9,7 +9,7 @@ bool IsoReader::getID(char *id, unsigned long long buffersize)
         return false;
     }
 
-    if (gameID == NULL)
+    if (gameID == nullptr)
     {
         // No input file
         if (!input_file.is_open())
@@ -37,7 +37,7 @@ bool IsoReader::getID(char *id, unsigned long long buffersize)
         // Reserve 200k of RAM to store the disk data
         char *disk_data = (char *)std::malloc(204800);
 
-        if (disk_data == NULL)
+        if (disk_data == nullptr)
         {
             setLastError(std::string("There was an error allocating the required memory."));
             return false;
@@ -85,9 +85,9 @@ bool IsoReader::getID(char *id, unsigned long long buffersize)
             }
         }
 
-        // Nothing was found, so we will free the buffer and return NULL
+        // Nothing was found, so we will free the buffer and return nullptr
         std::free((void *)disk_data);
-        if (gameID == NULL)
+        if (gameID == nullptr)
         {
             setLastError(std::string("No ID found."));
             return false;
@@ -135,10 +135,10 @@ unsigned long long IsoReader::readData(char *output, unsigned long long outputSi
 
 void IsoReader::freeReaderResources()
 {
-    if (gameID != NULL)
+    if (gameID != nullptr)
     {
         delete[] gameID;
-        gameID = NULL;
+        gameID = nullptr;
     }
 }
 

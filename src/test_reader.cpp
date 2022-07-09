@@ -17,13 +17,14 @@ Logging::Logger pLogger = Logging::Logger(Logging::LOG_IN_FILE, Logging::LOG_LEV
 
 int main()
 {
+    pLogger.changeLogLevel(Logging::LOG_LEVEL_TRACE);
 
     auto plugins = load_plugins("./", EXT, PTReader);
     for (auto ph : plugins)
     {
         fprintf(stderr, "Loading plugin...\n");
         auto plugin = ph->load();
-        if (plugin == NULL)
+        if (plugin == nullptr)
         {
             fprintf(stderr, "The plugin is not loaded correctly\n");
             continue;
