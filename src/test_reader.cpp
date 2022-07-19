@@ -13,12 +13,8 @@
 #define EXT ".so"
 #endif
 
-Logging::Logger pLogger = Logging::Logger(Logging::LOG_IN_FILE, Logging::LOG_LEVEL_WARNING, std::string("./test_reader.log"));
-
 int main()
 {
-    pLogger.changeLogLevel(Logging::LOG_LEVEL_TRACE);
-
     auto plugins = load_plugins("./", EXT, PTReader);
     for (auto ph : plugins)
     {

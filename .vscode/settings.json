@@ -88,6 +88,8 @@
         "xutility": "cpp",
         "cerrno": "cpp",
         "variant": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "cstdarg": "cpp",
+        "span": "cpp"
     }
 }
