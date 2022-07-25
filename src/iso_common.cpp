@@ -77,6 +77,14 @@ namespace PopstationmdgPlugin
             try
             {
                 input_file.open(filename, std::ifstream::binary);
+                // Seek to the end to get the size
+                seek(0, PluginSeekMode_End);
+                // Get the disk size
+                diskSize = tell();
+                diskRealSize = diskSize;
+                // Return to the begin
+                seek(0, PluginSeekMode_Begin);
+
                 return true;
             }
             catch (std::ios_base::failure &e)
@@ -129,6 +137,16 @@ namespace PopstationmdgPlugin
             setLastError(std::string("There was an error closing the output file: ") + std::string(e.what()));
             return false;
         }
+    }
+
+    unsigned long long IsoReader::getDiskSize()
+    {
+        return diskSize;
+    }
+
+    unsigned long long IsoReader::getDiskRealSize()
+    {
+        return diskRealSize;
     }
 
     // Seek into the file
@@ -520,6 +538,20 @@ namespace PopstationmdgPlugin
             IsoReader *object = (IsoReader *)handler;
 
             return object->getTotalDisks();
+        }
+
+        unsigned long long SHARED_EXPORT getDiskSize(void *handler)
+        {
+            IsoReader *object = (IsoReader *)handler;
+
+            return object->getDiskSize();
+        }
+
+        unsigned long long SHARED_EXPORT getDiskRealSize(void *handler)
+        {
+            IsoReader *object = (IsoReader *)handler;
+
+            return object->getDiskRealSize();
         }
 
         bool SHARED_EXPORT seek(void *handler, unsigned long long position, unsigned int mode)

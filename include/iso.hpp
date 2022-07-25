@@ -34,13 +34,14 @@ namespace PopstationmdgPlugin
         void clearError();
 
         // Reader & Writer
+        unsigned long long getDiskSize();
+        unsigned long long getDiskRealSize();
         bool seek(unsigned long long position, unsigned int mode);
         bool seekCurrentDisk(unsigned long long position, unsigned int mode);
         unsigned long long tell();
         unsigned long long tellCurrentDisk();
 
         // Reader
-
         unsigned long long readData(char *output, unsigned long long toRead);
         unsigned int getTotalDisks();
         unsigned int getCurrentDisk();
@@ -67,6 +68,12 @@ namespace PopstationmdgPlugin
         // ID
         char *gameID = nullptr;
 
+        // Disk Size
+        // Size in rest (compressed, optimized...)
+        size_t diskSize = 0;
+        // Final RAW data size
+        size_t diskRealSize = 0;
+
         // FileIO
         std::ifstream input_file;
         std::ofstream output_file;
@@ -90,6 +97,8 @@ namespace PopstationmdgPlugin
         bool SHARED_EXPORT getCompatibleExtensions(char *extensions, unsigned long long buffersize);
         unsigned int SHARED_EXPORT getCurrentDisk(void *handler);
         unsigned int SHARED_EXPORT getTotalDisks(void *handler);
+        unsigned long long SHARED_EXPORT getDiskSize(void *handler);
+        unsigned long long SHARED_EXPORT getDiskRealSize(void *handler);
         bool SHARED_EXPORT seek(void *handler, unsigned long long position, unsigned int mode);
         bool SHARED_EXPORT seekCurrentDisk(void *handler, unsigned long long position, unsigned int mode);
         unsigned long long SHARED_EXPORT tell(void *handler);
