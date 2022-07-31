@@ -187,6 +187,11 @@ namespace PopstationmdgPlugin
         }
         catch (std::ios_base::failure &e)
         {
+            if (input_file.eof())
+            {
+                // There was no error, is just that all requested data was not readed by an EOF
+                return input_file.gcount();
+            }
             setLastError(std::string("There was an error reading from the file: ").append(e.what()));
             return 0;
         }

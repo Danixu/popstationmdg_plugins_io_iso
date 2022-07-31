@@ -12,10 +12,12 @@ namespace PopstationmdgPlugin
             return 0;
         }
 
-        // Try to read from file
+        // Try to write to file
         try
         {
+            spdlog::trace("Writing {} bytes to output", inputSize);
             output_file.write(input, inputSize);
+            spdlog::trace("Data was writen correctly. Returning the writen size");
             return inputSize; // If nothing has failed, then all the data was writen.
         }
         catch (std::ios_base::failure &e)

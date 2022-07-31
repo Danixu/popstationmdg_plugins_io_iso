@@ -90,6 +90,7 @@
         "variant": "cpp",
         "source_location": "cpp",
         "cstdarg": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "valarray": "cpp"
     }
 }

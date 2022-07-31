@@ -48,7 +48,7 @@ int main()
             fprintf(stderr, "Error opening: %s\n", ph->getError().c_str());
         }
 
-        // Get the game ID
+        // Writing into the file
         fprintf(stderr, "Writing data into the file\n");
         char dataToWrite[] = "Hello my friend\0";
 

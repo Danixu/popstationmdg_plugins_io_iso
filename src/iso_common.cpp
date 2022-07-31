@@ -1,10 +1,21 @@
 #include "iso.hpp"
+#define DEBUG 1
 
 namespace PopstationmdgPlugin
 {
     // Reader constructor
-    IsoReader::IsoReader(void *logger)
+    IsoReader::IsoReader()
     {
+        // Initialize log system
+        spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%l] [thread %t] %v");
+        spdlog::flush_every(std::chrono::seconds(1));
+
+#ifdef DEBUG
+        spdlog::set_level(spdlog::level::debug);
+#endif
+
+        spdlog::info("Starting the ISO plugin");
+
         // Set the input stream to throw an exception is failbit or badbit was set
         std::ios_base::iostate inputExceptionMask = input_file.exceptions() | std::ifstream::failbit | std::ifstream::badbit;
         input_file.exceptions(inputExceptionMask);
@@ -59,10 +70,15 @@ namespace PopstationmdgPlugin
 
         if (pluginMode & PTWriter)
         {
+            // New file, new life. Reset all past errors.
+            output_file.clear();
+
             // Open the destination file
             try
             {
+                spdlog::debug("ISO: Openning the output file: {}", filename);
                 output_file.open(filename, std::ifstream::binary);
+                spdlog::debug("ISO: File opened correctly");
                 return true;
             }
             catch (std::ios_base::failure &e)
@@ -73,6 +89,9 @@ namespace PopstationmdgPlugin
         }
         else if (pluginMode & PTReader)
         {
+            // New file, new life. Reset all past errors.
+            input_file.clear();
+
             // Open source file
             try
             {
@@ -103,39 +122,44 @@ namespace PopstationmdgPlugin
         // Delete the ID which is not usefull anymore
         if (gameID != nullptr)
         {
+            spdlog::debug("Clearing the gameID object");
             delete[] gameID;
             gameID = nullptr;
         }
 
         // Try to close the input and output files
-        try
+        if (input_file.is_open())
         {
-            if (input_file.is_open())
+            try
             {
+
+                spdlog::debug("Closing the inpul file");
                 input_file.close();
+                input_file.clear();
+                return true;
             }
-
-            return true;
-        }
-        catch (std::ios_base::failure &e)
-        {
-            setLastError(std::string("There was an error closing the input file: ") + std::string(e.what()));
-            return false;
-        }
-
-        try
-        {
-            if (output_file.is_open())
+            catch (std::ios_base::failure &e)
             {
-                output_file.close();
+                setLastError(std::string("There was an error closing the input file: ") + std::string(e.what()));
+                return false;
             }
-
-            return true;
         }
-        catch (std::ios_base::failure &e)
+
+        if (output_file.is_open())
         {
-            setLastError(std::string("There was an error closing the output file: ") + std::string(e.what()));
-            return false;
+            try
+            {
+
+                spdlog::debug("Closing the inpul file");
+                output_file.close();
+                output_file.clear();
+                return true;
+            }
+            catch (std::ios_base::failure &e)
+            {
+                setLastError(std::string("There was an error closing the output file: ") + std::string(e.what()));
+                return false;
+            }
         }
     }
 
@@ -328,6 +352,7 @@ namespace PopstationmdgPlugin
 
     void IsoReader::setLastError(std::string error)
     {
+        spdlog::error("ISO: {}", error);
         size_t value_length = error.length() + 1;
         // If string is not empty
         if (value_length > 1)
@@ -421,9 +446,9 @@ namespace PopstationmdgPlugin
         //
         // Creates a new plugin object in memory and return its address
         //
-        void SHARED_EXPORT *load(void *logger)
+        void SHARED_EXPORT *load()
         {
-            void *ptr = (void *)new IsoReader(logger);
+            void *ptr = (void *)new IsoReader();
             return ptr;
         }
 

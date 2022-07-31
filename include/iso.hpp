@@ -14,6 +14,9 @@
 #include "export.h"
 #include "plugin_assistant.hpp"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 #ifndef _PLUGIN_HPP_H_
 #define _PLUGIN_HPP_H_
 
@@ -23,7 +26,7 @@ namespace PopstationmdgPlugin
     {
     public:
         // Constructor and destructor
-        IsoReader(void *logger = nullptr);
+        IsoReader();
         ~IsoReader();
 
         // Common
@@ -84,7 +87,7 @@ namespace PopstationmdgPlugin
     extern "C"
     {
         // Common
-        void SHARED_EXPORT *load(void *logger = nullptr);
+        void SHARED_EXPORT *load();
         void SHARED_EXPORT unload(void *ptr);
         unsigned int SHARED_EXPORT getType();
         bool SHARED_EXPORT getPluginName(char *name, unsigned long long buffersize);
