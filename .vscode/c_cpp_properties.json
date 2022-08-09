@@ -4,7 +4,8 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
             ],
             "defines": [
                 "__WXOSX_COCOA__",
@@ -22,7 +23,8 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
             ],
             "defines": [
                 "__WXMSW__",
@@ -39,7 +41,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
+                "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
             ],
             "defines": [
                 "__WXGTK__"
@@ -53,7 +56,8 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/**",
-                    "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*"
+                    "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
+                    "${workspaceFolder}/thirdparty/popstationmdg/include/*"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             }

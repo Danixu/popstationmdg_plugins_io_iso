@@ -1,4 +1,4 @@
-#include "iso.hpp"
+#include "iso.h"
 #define DEBUG 1
 
 namespace PopstationmdgPlugin
@@ -23,21 +23,6 @@ namespace PopstationmdgPlugin
         // Set the output stream to throw an exception is failbit or badbit was set
         std::ios_base::iostate outputExceptionMask = output_file.exceptions() | std::ifstream::failbit | std::ifstream::badbit;
         output_file.exceptions(outputExceptionMask);
-
-        /*
-        // Buffer Options
-        PluginOption enableBuffer;
-        options_order.push_back("enable_buffer");
-        enableBuffer.name = "Enable read buffer";
-        enableBuffer.value = false;
-        options_items["enable_buffer"] = enableBuffer;
-
-        PluginOption bufferSize;
-        options_order.push_back("read_buffer_size");
-        bufferSize.name = "Read buffer size";
-        bufferSize.value = (uint64_t)131072; // 128k
-        options_items["read_buffer_size"] = bufferSize;
-        */
     }
 
     // Reader destructor
@@ -61,7 +46,7 @@ namespace PopstationmdgPlugin
     }
 
     // Open the ISO file
-    bool IsoReader::open(char *filename, unsigned int mode, unsigned int threads)
+    bool IsoReader::open(char *filename, unsigned int mode, unsigned int compressionLevel, unsigned int threads)
     {
         // This plugin is very simple and non CPU intensive, so threads are not required and will be ignored
 
@@ -136,12 +121,10 @@ namespace PopstationmdgPlugin
                 spdlog::debug("Closing the inpul file");
                 input_file.close();
                 input_file.clear();
-                return true;
             }
             catch (std::ios_base::failure &e)
             {
                 setLastError(std::string("There was an error closing the input file: ") + std::string(e.what()));
-                return false;
             }
         }
 
@@ -150,17 +133,17 @@ namespace PopstationmdgPlugin
             try
             {
 
-                spdlog::debug("Closing the inpul file");
+                spdlog::debug("Closing the output file");
                 output_file.close();
                 output_file.clear();
-                return true;
             }
             catch (std::ios_base::failure &e)
             {
                 setLastError(std::string("There was an error closing the output file: ") + std::string(e.what()));
-                return false;
             }
         }
+
+        return true;
     }
 
     unsigned long long IsoReader::getDiskSize()
@@ -441,6 +424,11 @@ namespace PopstationmdgPlugin
         }
     }
 
+    bool IsoReader::setSettings(char *settingsData, unsigned long &settingsSize, unsigned int mode)
+    {
+        return true;
+    }
+
     extern "C"
     {
         //
@@ -502,7 +490,7 @@ namespace PopstationmdgPlugin
             return true;
         }
 
-        bool SHARED_EXPORT open(void *handler, char *filename, unsigned int mode, unsigned int threads)
+        bool SHARED_EXPORT open(void *handler, char *filename, unsigned int mode = PTReader, unsigned int compression = 9, unsigned int threads = 1)
         {
             IsoReader *object = (IsoReader *)handler;
 
@@ -605,6 +593,84 @@ namespace PopstationmdgPlugin
             IsoReader *object = (IsoReader *)handler;
 
             return object->tellCurrentDisk();
+        }
+
+        bool SHARED_EXPORT getSettings(char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader)
+        {
+            if (mode == PTReader)
+            {
+                char settingsDataReader[] = R"""({
+                    "enable_buffer" : {
+                        "type" : "checkbox",
+                        "description" : "Enable read buffer",
+                        "tooltip" : "Enable a buffer memory to speed up the read process",
+                        "default" : false
+                    },
+                    "buffer_size" : {
+                        "type" : "spin",
+                        "description" : "Read buffer size",
+                        "tooltip" : "Set the amount of memory reserved for the read buffer",
+                        "minvalue" : 23520000,
+                        "maxvalue" : 2352,
+                        "default" : 235200
+                    }
+                })""";
+
+                if (sizeof(settingsDataReader) > settingsSize)
+                {
+                    spdlog::error("The settings output buffer is not enough.");
+                    return false;
+                }
+
+                // Cleanup the entire output buffer
+                memset(settingsData, 0, settingsSize);
+
+                // Copy the reader settings to the buffer
+                strncpy_s(settingsData, settingsSize, settingsDataReader, sizeof(settingsDataReader));
+
+                // Update the settings exported size
+                settingsSize = sizeof(settingsDataReader);
+                return true;
+            }
+            else
+            {
+                char settingsDataWriter[] = R"""({
+                    "enable_buffer" : {
+                        "type" : "checkbox",
+                        "description" : "Enable write buffer",
+                        "tooltip" : "Enable a buffer memory to speed up the write process",
+                        "default" : false
+                    },
+                    "buffer_size" : {
+                        "type" : "spin",
+                        "description" : "Write buffer size",
+                        "tooltip" : "Set the amount of memory reserved for the write buffer",
+                        "minvalue" : 23520000,
+                        "maxvalue" : 2352,
+                        "default" : 235200
+                    }
+                })""";
+
+                if (sizeof(settingsDataWriter) > settingsSize)
+                {
+                    spdlog::error("The settings output buffer is not enough.");
+                    return false;
+                }
+
+                // Copy the reader settings to the buffer
+                strncpy_s(settingsData, settingsSize, settingsDataWriter, sizeof(settingsDataWriter));
+
+                // Update the settings exported size
+                settingsSize = sizeof(settingsDataWriter);
+                return true;
+            }
+        }
+
+        bool SHARED_EXPORT setSettings(void *handler, char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader)
+        {
+            IsoReader *object = (IsoReader *)handler;
+
+            return object->setSettings(settingsData, settingsSize, mode);
         }
     }
 }

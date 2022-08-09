@@ -7,4 +7,5 @@ cl.exe /LD /DBUILD_LIB /std:c++17 /EHsc /Fo:build/windows/ /Fe:bin/windows/iso.d
     /Iinclude ^
     /Ithirdparty/popstationmdg/thirdparty ^
     /Ithirdparty/popstationmdg/src/plugins/ ^
-    /Ithirdparty/popstationmdg/include/
+    /Ithirdparty/popstationmdg/include/ ^
+    /Ithirdparty/popstationmdg/include/plugins/

@@ -5,7 +5,7 @@
  */
 
 #include <vector>
-#include "plugin_handler.hpp"
+#include "plugin_handler.h"
 
 #ifdef _WIN32
 #define EXT ".dll"
