@@ -3,9 +3,10 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/src/plugins/*",
-                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
+                "${workspaceFolder}/include/*",
+                "${workspaceFolder}/thirdparty/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/thirdparty/*"
             ],
             "defines": [
                 "__WXOSX_COCOA__",
@@ -22,9 +23,10 @@
         {
             "name": "Windows",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
-                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
+                "${workspaceFolder}/include/*",
+                "${workspaceFolder}/thirdparty/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/thirdparty/*"
             ],
             "defines": [
                 "__WXMSW__",
@@ -40,9 +42,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
-                "${workspaceFolder}/thirdparty/popstationmdg/include/*"
+                "${workspaceFolder}/include/*",
+                "${workspaceFolder}/thirdparty/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/include/*",
+                "${workspaceFolder}/thirdparty/popstationmdg/thirdparty/*"
             ],
             "defines": [
                 "__WXGTK__"
@@ -55,9 +58,10 @@
             "mergeConfigurations": true,
             "browse": {
                 "path": [
-                    "${workspaceFolder}/**",
-                    "${workspaceFolder}/thirdparty/popstationmdg/include/plugins/*",
-                    "${workspaceFolder}/thirdparty/popstationmdg/include/*"
+                    "${workspaceFolder}/include/*",
+                    "${workspaceFolder}/thirdparty/*",
+                    "${workspaceFolder}/thirdparty/popstationmdg/include/*",
+                    "${workspaceFolder}/thirdparty/popstationmdg/thirdparty/*"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             }
