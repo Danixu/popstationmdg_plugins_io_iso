@@ -14,8 +14,16 @@
 #include "export.h"
 #include "plugin_assistant.h"
 
+#include "nlohmann_json/json.hpp"
+
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
+
+#define SETTINGS_MAX_BUFFER 23520000
+#define SETTINGS_MIN_BUFFER 23520
+#define SETTINGS_DEFAULT_BUFFER 235200
+
+using ordered_json = nlohmann::ordered_json;
 
 #ifndef _PLUGIN_HPP_H_
 #define _PLUGIN_HPP_H_

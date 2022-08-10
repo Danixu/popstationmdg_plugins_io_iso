@@ -432,6 +432,83 @@ namespace PopstationmdgPlugin
     extern "C"
     {
         //
+        // Get all the plugin info in json format.
+        //
+        void SHARED_EXPORT getPluginInfo(char *output, unsigned long long &buffersize)
+        {
+            ordered_json pluginInfo = ordered_json::parse(R"""({
+                "info" : {
+                    "name" : "ISO Image",
+                    "version" : "0.5.0",
+                    "multidisk" : false,
+                    "maxdisks" : 1,
+                    "compatibleExtensions" : [
+                        "iso"
+                    ],
+                    "customAppearance" : false,
+                    "type" : )""" + std::to_string(PTReader | PTWriter) +
+                                                          R"""(
+                },
+                "settings" : {
+                    "reader" : {
+                        "enable_buffer" : {
+                            "type" : "checkbox",
+                            "description" : "Enable read buffer",
+                            "tooltip" : "Enable a buffer memory to speed up the read process",
+                            "default" : false
+                        },
+                        "buffer_size" : {
+                            "type" : "spin",
+                            "description" : "Read buffer size",
+                            "tooltip" : "Set the amount of memory reserved for the read buffer",
+                            "minvalue" : )""" + std::to_string(SETTINGS_MIN_BUFFER) +
+                                                          R"""(,
+                            "maxvalue" : )""" + std::to_string(SETTINGS_MAX_BUFFER) +
+                                                          R"""(,
+                            "default" : )""" + std::to_string(SETTINGS_DEFAULT_BUFFER) +
+                                                          R"""(
+                        }
+                    },
+                    "writer" : {
+                        "enable_buffer" : {
+                            "type" : "checkbox",
+                            "description" : "Enable write buffer",
+                            "tooltip" : "Enable a buffer memory to speed up the write process",
+                            "default" : false
+                        },
+                        "buffer_size" : {
+                            "type" : "spin",
+                            "description" : "Write buffer size",
+                            "tooltip" : "Set the amount of memory reserved for the write buffer",
+                            "minvalue" : )""" + std::to_string(SETTINGS_MIN_BUFFER) +
+                                                          R"""(,
+                            "maxvalue" : )""" + std::to_string(SETTINGS_MAX_BUFFER) +
+                                                          R"""(,
+                            "default" : )""" + std::to_string(SETTINGS_DEFAULT_BUFFER) +
+                                                          R"""(
+                        }
+                    }
+                }
+            })""");
+
+            std::string settingsDataStr = pluginInfo.dump();
+
+            if (settingsDataStr.size() > buffersize)
+            {
+                spdlog::error("The settings output buffer is not enough.");
+            }
+
+            // Clear the output buffer
+            memset(output, 0, buffersize);
+
+            // Copy the plugin info to the output buffer
+            strncpy_s(output, buffersize, settingsDataStr.c_str(), settingsDataStr.size());
+
+            // Update the exported size
+            buffersize = settingsDataStr.size();
+        }
+
+        //
         // Creates a new plugin object in memory and return its address
         //
         void SHARED_EXPORT *load()
@@ -446,48 +523,6 @@ namespace PopstationmdgPlugin
         void SHARED_EXPORT unload(void *ptr)
         {
             delete (IsoReader *)ptr;
-        }
-
-        //
-        // Get the type of plugin to allow to filter
-        //
-        unsigned int SHARED_EXPORT getType()
-        {
-            return PTReader | PTWriter;
-        }
-
-        //
-        // Return the plugin name
-        //
-        bool SHARED_EXPORT getPluginName(char *name, unsigned long long buffersize)
-        {
-            // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
-            const char pn[] = "ISO Image";
-
-            if (sizeof(pn) > buffersize)
-            {
-                return false;
-            }
-
-            strncpy_s(name, buffersize, pn, sizeof(pn));
-            return true;
-        }
-
-        //
-        // Return the plugin version
-        //
-        bool SHARED_EXPORT getPluginVersion(char *version, unsigned long long buffersize)
-        {
-            // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
-            const char pv[] = "0.0.1";
-
-            if (sizeof(pv) > buffersize)
-            {
-                return false;
-            }
-
-            strncpy_s(version, buffersize, pv, sizeof(pv));
-            return true;
         }
 
         bool SHARED_EXPORT open(void *handler, char *filename, unsigned int mode = PTReader, unsigned int compression = 9, unsigned int threads = 1)
@@ -523,20 +558,6 @@ namespace PopstationmdgPlugin
             IsoReader *object = (IsoReader *)handler;
 
             object->clearError();
-        }
-
-        bool SHARED_EXPORT getCompatibleExtensions(char *extensions, unsigned long long buffersize)
-        {
-            // Compatible extensions for the reader/writter. Use pipe "|" between the extension: "*.iso|*.bin"
-            const char ext[] = "iso";
-
-            if (sizeof(ext) > buffersize)
-            {
-                return false;
-            }
-
-            strncpy_s(extensions, buffersize, ext, sizeof(ext));
-            return true;
         }
 
         unsigned int SHARED_EXPORT getCurrentDisk(void *handler)
@@ -593,77 +614,6 @@ namespace PopstationmdgPlugin
             IsoReader *object = (IsoReader *)handler;
 
             return object->tellCurrentDisk();
-        }
-
-        bool SHARED_EXPORT getSettings(char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader)
-        {
-            if (mode == PTReader)
-            {
-                char settingsDataReader[] = R"""({
-                    "enable_buffer" : {
-                        "type" : "checkbox",
-                        "description" : "Enable read buffer",
-                        "tooltip" : "Enable a buffer memory to speed up the read process",
-                        "default" : false
-                    },
-                    "buffer_size" : {
-                        "type" : "spin",
-                        "description" : "Read buffer size",
-                        "tooltip" : "Set the amount of memory reserved for the read buffer",
-                        "minvalue" : 23520000,
-                        "maxvalue" : 2352,
-                        "default" : 235200
-                    }
-                })""";
-
-                if (sizeof(settingsDataReader) > settingsSize)
-                {
-                    spdlog::error("The settings output buffer is not enough.");
-                    return false;
-                }
-
-                // Cleanup the entire output buffer
-                memset(settingsData, 0, settingsSize);
-
-                // Copy the reader settings to the buffer
-                strncpy_s(settingsData, settingsSize, settingsDataReader, sizeof(settingsDataReader));
-
-                // Update the settings exported size
-                settingsSize = sizeof(settingsDataReader);
-                return true;
-            }
-            else
-            {
-                char settingsDataWriter[] = R"""({
-                    "enable_buffer" : {
-                        "type" : "checkbox",
-                        "description" : "Enable write buffer",
-                        "tooltip" : "Enable a buffer memory to speed up the write process",
-                        "default" : false
-                    },
-                    "buffer_size" : {
-                        "type" : "spin",
-                        "description" : "Write buffer size",
-                        "tooltip" : "Set the amount of memory reserved for the write buffer",
-                        "minvalue" : 23520000,
-                        "maxvalue" : 2352,
-                        "default" : 235200
-                    }
-                })""";
-
-                if (sizeof(settingsDataWriter) > settingsSize)
-                {
-                    spdlog::error("The settings output buffer is not enough.");
-                    return false;
-                }
-
-                // Copy the reader settings to the buffer
-                strncpy_s(settingsData, settingsSize, settingsDataWriter, sizeof(settingsDataWriter));
-
-                // Update the settings exported size
-                settingsSize = sizeof(settingsDataWriter);
-                return true;
-            }
         }
 
         bool SHARED_EXPORT setSettings(void *handler, char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader)

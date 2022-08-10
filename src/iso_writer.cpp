@@ -33,17 +33,6 @@ namespace PopstationmdgPlugin
 
     extern "C"
     {
-        // This format doesn't support multidisk feature
-        bool SHARED_EXPORT hasMultiDiskSupport()
-        {
-            return false;
-        }
-
-        unsigned int SHARED_EXPORT getMaxDisks()
-        {
-            return 1;
-        }
-
         bool SHARED_EXPORT setTotalDisks(void *handler, unsigned int totalDisks)
         {
             return true;
