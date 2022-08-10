@@ -118,7 +118,7 @@ namespace PopstationmdgPlugin
             try
             {
 
-                spdlog::debug("Closing the inpul file");
+                spdlog::debug("Closing the input file");
                 input_file.close();
                 input_file.clear();
             }
@@ -142,6 +142,7 @@ namespace PopstationmdgPlugin
                 setLastError(std::string("There was an error closing the output file: ") + std::string(e.what()));
             }
         }
+        spdlog::debug("Everything was closed correctly");
 
         return true;
     }
@@ -424,8 +425,20 @@ namespace PopstationmdgPlugin
         }
     }
 
-    bool IsoReader::setSettings(char *settingsData, unsigned long &settingsSize, unsigned int mode)
+    bool IsoReader::setSettings(const char *settingsData, unsigned long settingsSize)
     {
+        json settings = json::parse(settingsData);
+
+        if (settings.contains("enable_buffer"))
+        {
+            bufferEnabled = settings["enable_buffer"];
+        }
+
+        if (settings.contains("buffer_size"))
+        {
+            bufferSize = settings["buffer_size"];
+        }
+
         return true;
     }
 
@@ -450,7 +463,7 @@ namespace PopstationmdgPlugin
                                                           R"""(
                 },
                 "settings" : {
-                    "reader" : {
+                    "Reader" : {
                         "enable_buffer" : {
                             "type" : "checkbox",
                             "description" : "Enable read buffer",
@@ -469,7 +482,7 @@ namespace PopstationmdgPlugin
                                                           R"""(
                         }
                     },
-                    "writer" : {
+                    "Writer" : {
                         "enable_buffer" : {
                             "type" : "checkbox",
                             "description" : "Enable write buffer",
@@ -616,11 +629,11 @@ namespace PopstationmdgPlugin
             return object->tellCurrentDisk();
         }
 
-        bool SHARED_EXPORT setSettings(void *handler, char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader)
+        bool SHARED_EXPORT setSettings(void *handler, const char *settingsData, unsigned long settingsSize)
         {
             IsoReader *object = (IsoReader *)handler;
 
-            return object->setSettings(settingsData, settingsSize, mode);
+            return object->setSettings(settingsData, settingsSize);
         }
     }
 }

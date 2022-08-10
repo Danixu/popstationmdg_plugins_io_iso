@@ -11,8 +11,8 @@
 #include <fstream>
 #include <cstring>
 
-#include "export.h"
-#include "plugin_assistant.h"
+#include "plugins/export.h"
+#include "plugins/plugin_assistant.h"
 
 #include "nlohmann_json/json.hpp"
 
@@ -24,6 +24,7 @@
 #define SETTINGS_DEFAULT_BUFFER 235200
 
 using ordered_json = nlohmann::ordered_json;
+using json = nlohmann::json;
 
 #ifndef _PLUGIN_HPP_H_
 #define _PLUGIN_HPP_H_
@@ -51,7 +52,7 @@ namespace PopstationmdgPlugin
         bool seekCurrentDisk(unsigned long long position, unsigned int mode);
         unsigned long long tell();
         unsigned long long tellCurrentDisk();
-        bool setSettings(char *settingsData, unsigned long &settingsSize, unsigned int mode = PTReader);
+        bool setSettings(const char *settingsData, unsigned long settingsSize);
 
         // Reader
         unsigned long long readData(char *output, unsigned long long toRead);
@@ -91,8 +92,8 @@ namespace PopstationmdgPlugin
         std::ofstream output_file;
 
         // Cache settings
-        bool cacheEnabled = false;
-        unsigned long cacheSize = 235200; // 200 sectors
+        bool bufferEnabled = false;
+        unsigned long bufferSize = 235200; // 200 sectors
     };
 }
 
