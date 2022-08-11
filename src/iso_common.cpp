@@ -453,6 +453,7 @@ namespace PopstationmdgPlugin
                 "info" : {
                     "name" : "ISO Image",
                     "version" : "0.5.0",
+                    "description" : "This plugin will write the data into ISO format. ISO is a raw format, so it doesn't have any kind of compression, multidisk or personalization support.",
                     "multidisk" : false,
                     "maxdisks" : 1,
                     "compatibleExtensions" : [
